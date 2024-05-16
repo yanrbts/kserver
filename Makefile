@@ -1,5 +1,5 @@
 CFLAGS  += -std=c99 -Wall -O2 -D_REENTRANT -g -I./civetweb/include
-LIBS    := -lm -lssl -lcrypto -lpthread ./civetweb/libcivetweb.a
+LIBS    := ./civetweb/libcivetweb.a -lm -lssl -lpthread
 
 TARGET  := $(shell uname -s | tr '[A-Z]' '[a-z]' 2>/dev/null || echo unknown)
 
@@ -17,9 +17,9 @@ else ifeq ($(TARGET), freebsd)
 	LDFLAGS += -Wl,-E
 endif
 
-SRC  := kserver.c
+SRC  := kserver.c log.c cJSON.c data.c
 		
-BIN  := kxykserver
+BIN  := kserver
 VER  ?= $(shell git describe --tags --always --dirty)
 
 ODIR := obj
