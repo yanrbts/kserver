@@ -48,16 +48,14 @@ static int ksresponse(struct mg_connection *conn,
                         const void *buf,
                         size_t len,
                         int status);
+static char *ksdup(const char *str);
+static void init_system_info(void);
 
+static int log_message_cb(const struct mg_connection *conn, const char *message);
+static void connection_close_cb(const struct mg_connection *conn);
 static int request_handler(struct mg_connection *conn, void *cbdata);
 
 /**************************API FUNCTION******************************/
-// static int user_register_handler(struct mg_connection *conn, 
-//                                         void *cbdata,
-//                                         json_parse_handler jf);
-// static int user_login_handler(struct mg_connection *conn, 
-//                                         void *cbdata,
-//                                         json_parse_handler jf);
 
 struct ApiEntry ApiTable[] = {
     {"/userregister", "POST", NULL, js_user_register_data},
@@ -75,6 +73,45 @@ static struct ApiEntry *getApiFunc(const char *uri, const char *method) {
             return api;
     }
     return NULL;
+}
+
+/*************************************************************************/
+
+static char *ksdup(const char *str) {
+	size_t len;
+	char *p;
+
+	len = strlen(str) + 1;
+	p = (char *)malloc(len);
+
+	if (p == NULL) {
+		log_error("Cannot allocate %u bytes", (unsigned)len);
+        exit(EXIT_FAILURE);
+	}
+
+	memcpy(p, str, len);
+	return p;
+}
+
+static void init_system_info(void) {
+	int len = mg_get_system_info(NULL, 0);
+	if (len > 0) {
+		server.system_info = (char *)malloc((unsigned)len + 1);
+		(void)mg_get_system_info(server.system_info, len + 1);
+	} else {
+		server.system_info = ksdup("Not available");
+	}
+}
+
+static int log_message_cb(const struct mg_connection *conn, const char *message) {
+    log_info("[*] http info (%s)", message);
+    return 1;
+}
+
+static void connection_close_cb(const struct mg_connection *conn) {
+    const struct mg_request_info *ri = NULL;
+    ri = mg_get_request_info(conn);
+    log_info("[*] %s connect close", ri->local_uri);
 }
 
 /* Server responds to client
@@ -188,8 +225,12 @@ static void initserver() {
         goto err;
     }
     memset(&server.callbacks, 0, sizeof(struct mg_callbacks));
+    server.callbacks.log_message = log_message_cb;
+    server.callbacks.connection_close = connection_close_cb;
+
     memset(&server.error, 0, sizeof(struct mg_error_data));
     memset(&server.init, 0, sizeof(struct mg_init_data));
+    init_system_info();
 
     server.error.text = error_text;
     server.error.text_buffer_size = sizeof(error_text);
