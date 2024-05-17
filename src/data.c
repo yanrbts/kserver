@@ -31,9 +31,54 @@ const char *STROK = "{\"flag\":\"OK\", \"msg\":\"success\"}";
 const char *STRFAIL = "{\"flag\":\"FAIL\", \"msg\":\"failed\"}";
 
 const char *js_user_register_data(char *buf, size_t len) {
-    static uint32_t i = 0;
-    printf("[%u] register : %s\n", ++i, buf);
+    cJSON *root;
+    cJSON *jaction, *jmachine, *juname, *jpwd;
+    User user;
+
+    root = cJSON_ParseWithLength(buf, len);
+
+    if (root == NULL) {
+        log_error("user register json data parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+
+    /* action */
+    jaction = cJSON_GetObjectItem(root, "action");
+    if (cJSON_IsString(jaction) && (jaction->valuestring != NULL)) {
+        user.action = jaction->valuestring;
+    } else {
+        log_error("json get object 'action' parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+    /* machine */
+    jmachine = cJSON_GetObjectItem(root, "machine");
+    if (cJSON_IsString(jmachine) && (jmachine->valuestring != NULL)) {
+        user.machine = jmachine->valuestring;
+    } else {
+        log_error("json get object 'machine' parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+    /* username */
+    juname = cJSON_GetObjectItem(root, "username");
+    if (cJSON_IsString(juname) && (juname->valuestring != NULL)) {
+        user.username = juname->valuestring;
+    } else {
+        log_error("json get object 'username' parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+    /* password */
+    jpwd = cJSON_GetObjectItem(root, "password");
+    if (cJSON_IsString(jpwd) && (jpwd->valuestring != NULL)) {
+        user.pwd = jpwd->valuestring;
+    } else {
+        log_error("json get object 'password' parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+
+    cJSON_Delete(root);
     return STROK;
+err:
+    return STRFAIL;
 }
 
 const char *js_user_login_data(char *buf, size_t len) {

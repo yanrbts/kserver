@@ -30,6 +30,13 @@
 
 #include <stddef.h>
 
+typedef struct User {
+    char *action;   /* function action (REGISTER or LOGIN) */
+    char *machine;  /* machine code (uuid)*/
+    char *username; /* username */
+    char *pwd;      /* password */
+} User;
+
 const char *js_user_register_data(char *buf, size_t len);
 const char *js_user_login_data(char *buf, size_t len);
 
