@@ -21,28 +21,27 @@ json_data = json.dumps(data)
 
 # 发送请求的函数
 def send_request():
-    while True:
-        try:
-            # 发送 POST 请求
-            url = random.choice(urls)
-            response = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'})
+    try:
+        # 发送 POST 请求
+        url = random.choice(urls)
+        response = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'})
 
-            # 检查响应状态码
-            if response.status_code == 200:
-                print('Request was successful')
-                print('Response:', response.json())
-            else:
-                print(f'Request failed with status code {response.status_code}')
-                print('Response:', response.text)
-        except Exception as e:
-            print(f'An error occurred: {e}')
+        # 检查响应状态码
+        if response.status_code == 200:
+            print('Request was successful')
+            print('Response:', response.json())
+        else:
+            print(f'Request failed with status code {response.status_code}')
+            print('Response:', response.text)
+    except Exception as e:
+        print(f'An error occurred: {e}')
 
         # 等待一段时间再发送下一次请求（例如，1秒）
         #time.sleep(1)
 
 # 创建并启动多个线程
 threads = []
-num_threads = 20  # 设定线程数，根据需要调整
+num_threads = 1  # 设定线程数，根据需要调整
 
 for _ in range(num_threads):
     thread = threading.Thread(target=send_request)

@@ -1,4 +1,4 @@
-CFLAGS  += -std=c99 -Wall -O2 -D_REENTRANT -g -I./civetweb/include
+CFLAGS  += -std=c99 -Wall -O2 -D_REENTRANT -DLOG_USE_COLOR -g -I./civetweb/include
 LIBS    := ./civetweb/libcivetweb.a -lm -lssl -lpthread
 
 TARGET  := $(shell uname -s | tr '[A-Z]' '[a-z]' 2>/dev/null || echo unknown)

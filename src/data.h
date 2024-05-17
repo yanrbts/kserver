@@ -30,7 +30,9 @@
 
 #include <stddef.h>
 
-int js_user_register_data(char *buf, size_t len);
-int js_user_login_data(char *buf, size_t len);
+const char *js_user_register_data(char *buf, size_t len);
+const char *js_user_login_data(char *buf, size_t len);
+
+extern const char *STRFAIL;
 
 #endif

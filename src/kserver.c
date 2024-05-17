@@ -33,9 +33,15 @@
 #include <sys/resource.h>
 #include <sys/utsname.h>
 #include <locale.h>
+#include <dirent.h>
 
 #include "kserver.h"
 
+#define MAXLEN          1024
+#define HTTP_OK         200
+#define HTTP_NOFOUND    404
+#define HTTP_ROOT       "./api"
+#define HTTP_PORT       "8099"
 
 struct Server server;
 
@@ -54,12 +60,13 @@ static void init_system_info(void);
 static int log_message_cb(const struct mg_connection *conn, const char *message);
 static void connection_close_cb(const struct mg_connection *conn);
 static int request_handler(struct mg_connection *conn, void *cbdata);
+static void send_directory_listing(struct mg_connection *conn, const char *dir);
 
 /**************************API FUNCTION******************************/
 
 struct ApiEntry ApiTable[] = {
-    {"/userregister", "POST", NULL, js_user_register_data},
-    {"/userlogin", "POST", NULL, js_user_login_data}
+    {"/userregister", "POST", js_user_register_data},
+    {"/userlogin", "GET", js_user_login_data}
 };
 
 static struct ApiEntry *getApiFunc(const char *uri, const char *method) {
@@ -75,8 +82,47 @@ static struct ApiEntry *getApiFunc(const char *uri, const char *method) {
     return NULL;
 }
 
-/*************************************************************************/
+/**********************************DOCAPI***************************************/
 
+static void send_directory_listing(struct mg_connection *conn, const char *dir) {
+    struct dirent *entry;
+    DIR *dp = opendir(dir);
+
+    if (dp == NULL) {
+        mg_printf(conn, "HTTP/1.1 500 Internal Server Error\r\n"
+                        "Content-Type: text/plain\r\n\r\n"
+                        "Cannot open directory");
+        return;
+    }
+
+    mg_printf(conn, "HTTP/1.1 200 OK\r\n"
+                    "Content-Type: text/html\r\n\r\n");
+
+    mg_printf(conn, "<html><body><h1>Kserver API listing</h1><ul>");
+
+    while ((entry = readdir(dp))) {
+        char path[2048];
+        snprintf(path, sizeof(path), "%s/%s", dir, entry->d_name);
+        struct stat st;
+        stat(path, &st);
+
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;   // Skip "." and ".."
+        }
+
+        if (S_ISDIR(st.st_mode)) {
+            mg_printf(conn, "<li><a href=\"%s/\">%s/</a></li>", entry->d_name, entry->d_name);
+        } else {
+            mg_printf(conn, "<li><a href=\"%s\">%s</a></li>", path, entry->d_name);
+        }
+    }
+
+    mg_printf(conn, "</ul></body></html>");
+
+    closedir(dp);
+}
+
+/*******************************************************************************/
 static char *ksdup(const char *str) {
 	size_t len;
 	char *p;
@@ -104,14 +150,14 @@ static void init_system_info(void) {
 }
 
 static int log_message_cb(const struct mg_connection *conn, const char *message) {
-    log_info("[*] http info (%s)", message);
+    log_info("http info (%s)", message);
     return 1;
 }
 
 static void connection_close_cb(const struct mg_connection *conn) {
     const struct mg_request_info *ri = NULL;
     ri = mg_get_request_info(conn);
-    log_info("[*] %s connect close", ri->local_uri);
+    log_info("(%s) connect close", ri->local_uri);
 }
 
 /* Server responds to client
@@ -124,59 +170,118 @@ static int ksresponse(struct mg_connection *conn,
                         size_t len,
                         int status)
 {
+    int ret;
     char len_text[32];
 
-    mg_response_header_start(conn, status);
-    mg_response_header_add(conn,
+    if ((ret = mg_response_header_start(conn, status)) != 0) {
+        log_error("mg_response_header_start error (%d)", ret);
+        goto err;
+    }
+        
+    
+    ret = mg_response_header_add(conn,
 	                       "Content-Type",
 	                       "application/json; charset=utf-8",
 	                       -1);
+    if (ret != 0) {
+        log_error("mg_response_header_add error (%d)", ret);
+        goto err;
+    }
 
     sprintf(len_text, "%lu", len);
-    mg_response_header_add(conn, "Content-Length", len_text, -1);
-	mg_response_header_send(conn);
-	mg_write(conn, buf, len);
+    if ((ret = mg_response_header_add(conn, "Content-Length", len_text, -1)) != 0) {
+        log_error("mg_response_header_add error (%d)", ret);
+        goto err;
+    }
+	if ((ret = mg_response_header_send(conn)) != 0) {
+        log_error("mg_response_header_send error (%d)", ret);
+        goto err;
+    }
+	
+    if ((ret = mg_write(conn, buf, len)) <= 0) {
+        if (ret == 0)
+            log_error("mg_write the connection has been closed error (%d)", ret);
+        if (ret == -1)
+            log_error("mg_write on error (%d)", ret);
+        goto err;
+    }
 
     return status;
+err:
+    return -1;
 }
 
+/* mg_request_handler
+
+   Called when a new request comes in.  This callback is URI based
+   and configured with mg_set_request_handler().
+
+   Parameters:
+      conn: current connection information.
+      cbdata: the callback data configured with mg_set_request_handler().
+   Returns:
+      0: the handler could not handle the request, so fall through.
+      1 - 999: the handler processed the request. The return code is
+               stored as a HTTP status code for the access log. */
 static int
 request_handler(struct mg_connection *conn, void *cbdata) {
-    /* Generate a response text and status code. */
 	int status;
-	char response[1024];
+    const char *strret = NULL;
+	char response[MAXLEN] = {0};
+    char buf[MAXLEN] = {0};
     struct ApiEntry *api = NULL;
     const struct mg_request_info *ri = NULL;
-    uint32_t uri_len;
-    uint64_t content_len;
-    char buf[1024] = {0};
-
+    size_t uri_len;
+    size_t content_len;
+    
     /* Get the URI from the request info. */
     ri = mg_get_request_info(conn);
-    uri_len = (uint32_t)strlen(ri->local_uri);
+    uri_len = strlen(ri->local_uri);
 
     if (uri_len <= 100) {
-        status = 200; /* 200 = OK */
+        status = HTTP_OK; /* 200 = OK */
 
         api = getApiFunc(ri->local_uri, ri->request_method);
-        mg_read(conn, buf, sizeof(buf));
-        // api->func(conn, api->jfunc);
-        if (api) {
-            api->jfunc(buf, strlen(buf));
-            sprintf(response, "%s", "{\"action\":\"COMPLETE\", \"msg\":\"The upload has been completed.\"}");
+        if (api && ri->content_length > 0) {
+            mg_read(conn, buf, sizeof(buf));
+            strret = api->jfunc(buf, strlen(buf));
+            sprintf(response, "%s", strret);
         } else {
-            sprintf(response, "%s", "{\"action\":\"FAILED\", \"msg\":\"FAILE.\"}");
+            status = HTTP_NOFOUND;
+            sprintf(response, "%s", STRFAIL);
         }
     } else {
-        status = 404; /* 404 = Not Found */
+        status = HTTP_NOFOUND; /* 404 = Not Found */
         /* We don't like this URL */
-		sprintf(response, "No such URL\n");
+		sprintf(response, "%s", STRFAIL);
     }
-    content_len = (uint64_t)strlen(response);
+    content_len = strlen(response);
     
-	ksresponse(conn, response, content_len, status);
+    /* Returns:
+     * 0: the handler could not handle the request, so fall through.
+     * 1 - 999: the handler processed the request. The return code is
+     * stored as a HTTP status code for the access log. */
+	if (ksresponse(conn, response, content_len, status) != -1)
+        return status;
+    return 0;
+}
 
-	return status;
+static int apidoc_handle_request(struct mg_connection *conn, void *cbdata) {
+    char path[1024];
+    struct stat st;
+
+    const struct mg_request_info *request_info = mg_get_request_info(conn);
+    snprintf(path, sizeof(path), "%s", request_info->local_uri);
+    log_info("(%s) api request.", path);
+
+    if (stat(path+1, &st) == 0 && S_ISDIR(st.st_mode)) {
+        send_directory_listing(conn, path+1);
+        return 1; // Mark as processed
+    } else {
+        // Serve file or return 404
+        mg_send_file(conn, path+1);
+        return 1; // Mark as processed
+    }
 }
 
 static void sigShutdownHandler(int sig) {
@@ -215,6 +320,12 @@ void setupSignalHandlers(void) {
 static void initserver() {
     int ret;
 
+    const char *options[] = {
+        "document_root", HTTP_ROOT,
+        "listening_ports", HTTP_PORT,
+        NULL
+    };
+
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
     setupSignalHandlers();
@@ -237,6 +348,7 @@ static void initserver() {
 
     server.init.callbacks = &server.callbacks;
     server.init.user_data = NULL;
+    server.init.configuration_options = options;
     server.ctx = NULL;
     return;
 err:
@@ -246,10 +358,11 @@ err:
 static void startserver() {
     server.ctx = mg_start2(&server.init, &server.error);
 
-    if (server.ctx) {
-        mg_set_request_handler(server.ctx, "/user", request_handler, NULL);
+    if (server.ctx && server.error.code == MG_ERROR_DATA_CODE_OK) {
+        mg_set_request_handler(server.ctx, "/", request_handler, NULL);
+        mg_set_request_handler(server.ctx, "/api", apidoc_handle_request, NULL);
     } else {
-        log_error("Initialization failed: (%u), %s", server.error.code, server.error.text);
+        log_error("Initialization failed, (%u) %s", server.error.code, server.error.text);
         goto err;
     }
 
@@ -263,6 +376,7 @@ err:
 static void stopserver() {
     if (server.ctx) 
         mg_stop(server.ctx);
+    free(server.system_info);
     mg_exit_library();
 }
 

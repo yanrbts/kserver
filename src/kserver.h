@@ -56,12 +56,10 @@ struct Server {
     char *system_info;                  /*  information on the system. Useful for support requests.*/
 };
 
-typedef int (*json_parse_handler)(char *buf, size_t len);
+typedef const char *(*json_parse_handler)(char *buf, size_t len);
 struct ApiEntry {
     char *uri;               /* HTTP URI */
     char *method;            /* POST / GET */
-    mg_request_handler func; /* Called when a new request comes in.  This callback is URI based
-                              * and configured with mg_set_request_handler().*/
     json_parse_handler jfunc; /* json parsing function */
 };
 

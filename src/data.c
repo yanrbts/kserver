@@ -27,13 +27,17 @@
  */
 #include "kserver.h"
 
-int js_user_register_data(char *buf, size_t len) {
+const char *STROK = "{\"flag\":\"OK\", \"msg\":\"success\"}";
+const char *STRFAIL = "{\"flag\":\"FAIL\", \"msg\":\"failed\"}";
+
+const char *js_user_register_data(char *buf, size_t len) {
     static uint32_t i = 0;
     printf("[%u] register : %s\n", ++i, buf);
-    return 0;
+    return STROK;
 }
 
-int js_user_login_data(char *buf, size_t len) {
-    printf("login : %s\n", buf);
-    return 0;
+const char *js_user_login_data(char *buf, size_t len) {
+    static uint32_t j = 0;
+    printf("[%u] login : %s\n", ++j, buf);
+    return STROK;
 }
