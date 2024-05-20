@@ -1,5 +1,8 @@
-/*
- * Copyright (c) 2024-2024, Yanruibing <yanruibing@kxyk.com> All rights reserved.
+/* SDSLib 2.0 -- A C dynamic strings library
+ *
+ * Copyright (c) 2006-2015, Salvatore Sanfilippo <antirez at gmail dot com>
+ * Copyright (c) 2015, Redis Labs, Inc
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,22 +28,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __DATA__
-#define __DATA__
 
-#include <stddef.h>
-#include "sds.h"
+/* SDS allocator selection.
+ *
+ * This file is used in order to change the SDS allocator at compile time.
+ * Just define the following defines to what you want to use. Also add
+ * the include of your alternate allocator if needed (not needed in order
+ * to use the default libc allocator). */
 
-typedef struct User {
-    sds action;   /* function action (REGISTER or LOGIN) */
-    sds machine;  /* machine code (uuid)*/
-    sds username; /* username */
-    sds pwd;      /* password */
-} User;
-
-const char *js_user_register_data(char *buf, size_t len);
-const char *js_user_login_data(char *buf, size_t len);
-
-extern const char *STRFAIL;
-
-#endif
+#include "zmalloc.h"
+#define s_malloc zmalloc
+#define s_realloc zrealloc
+#define s_free zfree

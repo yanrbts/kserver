@@ -25,22 +25,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __DATA__
-#define __DATA__
+#ifndef __DB__
+#define __DB__
 
-#include <stddef.h>
-#include "sds.h"
-
-typedef struct User {
-    sds action;   /* function action (REGISTER or LOGIN) */
-    sds machine;  /* machine code (uuid)*/
-    sds username; /* username */
-    sds pwd;      /* password */
-} User;
-
-const char *js_user_register_data(char *buf, size_t len);
-const char *js_user_login_data(char *buf, size_t len);
-
-extern const char *STRFAIL;
+void init_redis();
 
 #endif

@@ -41,7 +41,10 @@
 #include <signal.h>
 #include <pthread.h>
 #include <civetweb.h>
+#include <hiredis.h>
 
+#include "zmalloc.h"
+#include "sds.h"
 #include "cJSON.h"
 #include "data.h"
 #include "log.h"
@@ -53,7 +56,8 @@ struct Server {
     struct mg_server_port ports[32];
     struct mg_error_data error;
     uint64_t clients;                   /* Current number of connections */
-    char *system_info;                  /*  information on the system. Useful for support requests.*/
+    char *system_info;                  /* information on the system. Useful for support requests.*/
+    redisContext *redis;                /* redis object pointer*/
 };
 
 typedef const char *(*json_parse_handler)(char *buf, size_t len);

@@ -1,5 +1,5 @@
-CFLAGS  += -std=c99 -Wall -O2 -D_REENTRANT -DLOG_USE_COLOR -g -I./civetweb/include
-LIBS    := ./civetweb/libcivetweb.a -lm -lssl -lpthread
+CFLAGS  += -std=c99 -Wall -O2 -D_REENTRANT -DLOG_USE_COLOR -g -I./civetweb/include -I./hiredis
+LIBS    := ./civetweb/libcivetweb.a ./hiredis/libhiredis.a -lm -lssl -lpthread
 
 TARGET  := $(shell uname -s | tr '[A-Z]' '[a-z]' 2>/dev/null || echo unknown)
 
@@ -17,7 +17,7 @@ else ifeq ($(TARGET), freebsd)
 	LDFLAGS += -Wl,-E
 endif
 
-SRC  := kserver.c zmalloc.c log.c cJSON.c data.c 
+SRC  := kserver.c zmalloc.c sds.c log.c cJSON.c data.c db.c
 		
 BIN  := kserver
 VER  ?= $(shell git describe --tags --always --dirty)
