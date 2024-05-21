@@ -65,8 +65,8 @@ static void send_directory_listing(struct mg_connection *conn, const char *dir);
 /**************************API FUNCTION******************************/
 
 struct ApiEntry ApiTable[] = {
-    {"/userregister", "POST", js_user_register_data},
-    {"/userlogin", "GET", js_user_login_data}
+    {"/userregister", "POST", js_user_register_data, redis_user_register},
+    {"/userlogin", "GET", js_user_login_data, NULL}
 };
 
 static struct ApiEntry *getApiFunc(const char *uri, const char *method) {
@@ -244,7 +244,7 @@ request_handler(struct mg_connection *conn, void *cbdata) {
         api = getApiFunc(ri->local_uri, ri->request_method);
         if (api && ri->content_length > 0) {
             mg_read(conn, buf, sizeof(buf));
-            strret = api->jfunc(buf, strlen(buf));
+            strret = api->jfunc(buf, strlen(buf), api->dbfunc);
             sprintf(response, "%s", strret);
         } else {
             status = HTTP_NOFOUND;
@@ -350,6 +350,8 @@ static void initserver() {
     server.init.user_data = NULL;
     server.init.configuration_options = options;
     server.ctx = NULL;
+    server.redis = redis_init("127.0.0.1", 6379);
+
     return;
 err:
     exit(0);
@@ -377,6 +379,8 @@ static void stopserver() {
     if (server.ctx) 
         mg_stop(server.ctx);
     free(server.system_info);
+    redisFree(server.redis->context);
+    zfree(server.redis);
     mg_exit_library();
 }
 

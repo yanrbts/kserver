@@ -47,6 +47,7 @@
 #include "sds.h"
 #include "cJSON.h"
 #include "data.h"
+#include "db.h"
 #include "log.h"
 
 struct Server {
@@ -57,14 +58,15 @@ struct Server {
     struct mg_error_data error;
     uint64_t clients;                   /* Current number of connections */
     char *system_info;                  /* information on the system. Useful for support requests.*/
-    redisContext *redis;                /* redis connect object pointer*/
+    Ksyncredis *redis;                  /* manage redis connect object pointer*/
 };
 
-typedef const char *(*json_parse_handler)(char *buf, size_t len);
+typedef const char *(*json_parse_handler)(char *buf, size_t len, redis_data_save dbfunc);
 struct ApiEntry {
-    char *uri;               /* HTTP URI */
-    char *method;            /* POST / GET */
-    json_parse_handler jfunc; /* json parsing function */
+    char *uri;                  /* HTTP URI */
+    char *method;               /* POST / GET */
+    json_parse_handler jfunc;   /* json parsing function */
+    redis_data_save dbfunc;     /* redis data save function */
 };
 
 

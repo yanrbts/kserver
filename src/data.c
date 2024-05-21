@@ -30,10 +30,10 @@
 const char *STROK = "{\"flag\":\"OK\", \"msg\":\"success\"}";
 const char *STRFAIL = "{\"flag\":\"FAIL\", \"msg\":\"failed\"}";
 
-const char *js_user_register_data(char *buf, size_t len) {
+const char *js_user_register_data(char *buf, size_t len, redis_data_save dbfunc) {
     cJSON *root;
     cJSON *jaction, *jmachine, *juname, *jpwd;
-    User user;
+    Kuser user = {NULL};
 
     root = cJSON_ParseWithLength(buf, len);
 
@@ -45,7 +45,7 @@ const char *js_user_register_data(char *buf, size_t len) {
     /* action */
     jaction = cJSON_GetObjectItem(root, "action");
     if (cJSON_IsString(jaction) && (jaction->valuestring != NULL)) {
-        user.action = jaction->valuestring;
+        user.action = sdsnew(jaction->valuestring);
     } else {
         log_error("json get object 'action' parse error (%s).", cJSON_GetErrorPtr());
         goto err;
@@ -53,7 +53,7 @@ const char *js_user_register_data(char *buf, size_t len) {
     /* machine */
     jmachine = cJSON_GetObjectItem(root, "machine");
     if (cJSON_IsString(jmachine) && (jmachine->valuestring != NULL)) {
-        user.machine = jmachine->valuestring;
+        user.machine = sdsnew(jmachine->valuestring);
     } else {
         log_error("json get object 'machine' parse error (%s).", cJSON_GetErrorPtr());
         goto err;
@@ -61,7 +61,7 @@ const char *js_user_register_data(char *buf, size_t len) {
     /* username */
     juname = cJSON_GetObjectItem(root, "username");
     if (cJSON_IsString(juname) && (juname->valuestring != NULL)) {
-        user.username = juname->valuestring;
+        user.username = sdsnew(juname->valuestring);
     } else {
         log_error("json get object 'username' parse error (%s).", cJSON_GetErrorPtr());
         goto err;
@@ -69,19 +69,36 @@ const char *js_user_register_data(char *buf, size_t len) {
     /* password */
     jpwd = cJSON_GetObjectItem(root, "password");
     if (cJSON_IsString(jpwd) && (jpwd->valuestring != NULL)) {
-        user.pwd = jpwd->valuestring;
+        user.pwd = sdsnew(jpwd->valuestring);
     } else {
         log_error("json get object 'password' parse error (%s).", cJSON_GetErrorPtr());
         goto err;
     }
 
     cJSON_Delete(root);
+
+    /* save data to redis */
+    if (dbfunc) {
+        if (dbfunc(server.redis, (void*)&user) != 0)
+            goto err;
+    }
+
+    if (user.action) sdsfree(user.action);
+    if (user.machine) sdsfree(user.machine);
+    if (user.username) sdsfree(user.username);
+    if (user.pwd) sdsfree(user.pwd);
+
     return STROK;
 err:
+    if (user.action) sdsfree(user.action);
+    if (user.machine) sdsfree(user.machine);
+    if (user.username) sdsfree(user.username);
+    if (user.pwd) sdsfree(user.pwd);
+
     return STRFAIL;
 }
 
-const char *js_user_login_data(char *buf, size_t len) {
+const char *js_user_login_data(char *buf, size_t len, redis_data_save dbfunc) {
     static uint32_t j = 0;
     printf("[%u] login : %s\n", ++j, buf);
     return STROK;

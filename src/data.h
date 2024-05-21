@@ -30,16 +30,19 @@
 
 #include <stddef.h>
 #include "sds.h"
+#include "db.h"
 
-typedef struct User {
+typedef int (*redis_data_save)(Ksyncredis *redis, void *data);
+
+typedef struct Kuser {
     sds action;   /* function action (REGISTER or LOGIN) */
     sds machine;  /* machine code (uuid)*/
     sds username; /* username */
     sds pwd;      /* password */
-} User;
+} Kuser;
 
-const char *js_user_register_data(char *buf, size_t len);
-const char *js_user_login_data(char *buf, size_t len);
+const char *js_user_register_data(char *buf, size_t len, redis_data_save dbfunc);
+const char *js_user_login_data(char *buf, size_t len, redis_data_save dbfunc);
 
 extern const char *STRFAIL;
 

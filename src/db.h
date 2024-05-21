@@ -28,6 +28,36 @@
 #ifndef __DB__
 #define __DB__
 
-void init_redis();
+typedef enum Kdbtype {
+    /* User registration */
+    REDIS_USER_REGISTER,
+} Kdbtype;
+
+typedef struct Ksyncredis {
+    redisContext *context;
+} Ksyncredis;
+
+typedef void (*synccallback)(redisReply *c, sds *outdata);
+struct action {
+    Kdbtype type;
+    char *cmdline;
+    synccallback syncexec;
+};
+
+/** @brief Init redis context Create redis sync link object
+ * 
+ * @param addr redis-server ip address eg. : 127.0.0.1
+ * @param port redis-server port eg. : 6790
+ * @return Returns the created object, or NULL if failed
+ */
+Ksyncredis *redis_init(const char *addr, uint32_t port);
+
+/** @brief Save registered user data
+ * 
+ * @param redis redis object
+ * @param data struct User object
+ * @return Returns 0 on success, -1 otherwise
+ */
+int redis_user_register(Ksyncredis *redis, void *data);
 
 #endif
