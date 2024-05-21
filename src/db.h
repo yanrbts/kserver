@@ -29,8 +29,9 @@
 #define __DB__
 
 typedef enum Kdbtype {
-    /* User registration */
-    REDIS_USER_REGISTER,
+    REDIS_USER_REGISTER,    /* User registration */
+    REDIS_USER_INFO,        /* Get individual user information */
+    REDIS_USER_ALL_INFO
 } Kdbtype;
 
 typedef struct Ksyncredis {
@@ -54,7 +55,7 @@ Ksyncredis *redis_init(const char *addr, uint32_t port);
 
 /** @brief Save registered user data
  * 
- * @param redis redis object
+ * @param redis redis object 
  * @param data struct User object
  * @return Returns 0 on success, -1 otherwise
  */

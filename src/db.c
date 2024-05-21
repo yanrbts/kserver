@@ -30,7 +30,20 @@
 static void kx_set_reply(redisReply *reply, sds *outdata);
 
 struct action acs[] = {
-    {.type = REDIS_USER_REGISTER, .cmdline = "HMSET nodekey:%s uuid %s", .syncexec = kx_set_reply},
+    /* redis HMSET key field value [field value ...]
+     * Sets the specified fields to their respective values in the hash stored at key. 
+     * This command overwrites any specified fields already existing in the hash.
+     * If key does not exist, a new key holding a hash is created. */
+    {.type = REDIS_USER_REGISTER, .cmdline = "HMSET userkey:%s uuid %s username %s", .syncexec = kx_set_reply},
+    /* Returns all fields and values of the hash stored at key. In the returned value, 
+     * every field name is followed by its value, so the length of the reply is twice
+     * the size of the hash.*/
+    {.type = REDIS_USER_INFO, .cmdline = "HGETALL userkey:%s", .syncexec = kx_set_reply},
+    /* SCAN cursor [MATCH pattern] [COUNT count] [TYPE type]
+     * SCAN is a cursor based iterator. This means that at every call of the command, 
+     * the server returns an updated cursor that the user needs to use as the cursor 
+     * argument in the next call.*/
+    {.type = REDIS_USER_ALL_INFO, .cmdline = "SCAN %d MATCH userkey:* COUNT %d", .syncexec = kx_set_reply}
 };
 
 #define ACSIZE sizeof(acs)/sizeof(acs[0])
@@ -89,15 +102,13 @@ static redisReply *kx_sync_send_cmd(redisContext *c, const char *fmt, ...) {
     }
     log_info("cmd : %s", ptr);
     reply = kx_command(c, ptr);
-
-    zfree(ptr);
 ret:
     if (ptr) zfree(ptr);
     return reply;
 }
 
 Ksyncredis *redis_init(const char *addr, uint32_t port) {
-    struct timeval timeout = {1, 500000}; // 1.5 seconds
+    struct timeval timeout = {20, 500000}; // 1.5 seconds
 
     Ksyncredis *redis = zmalloc(sizeof(*redis));
     if (redis == NULL) {
@@ -132,6 +143,7 @@ int redis_user_register(Ksyncredis *redis, void *data) {
     if (ac) {
         reply = kx_sync_send_cmd(redis->context,
                             ac->cmdline, 
+                            u->machine,
                             u->machine,
                             u->username);
         ac->syncexec(reply, &out);
