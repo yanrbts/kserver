@@ -41,8 +41,21 @@ typedef struct Kuser {
     sds pwd;      /* password */
 } Kuser;
 
-const char *js_user_register_data(char *buf, size_t len, redis_data_save dbfunc);
-const char *js_user_login_data(char *buf, size_t len, redis_data_save dbfunc);
+typedef struct Kfile {
+    sds machine;  /* machine code (uuid)*/
+    sds uuid;     /* file uuid */
+    sds data;     /* json data */
+} Kfile;
+
+sds js_user_register_data(char *buf, size_t len);
+sds js_user_get(char *buf, size_t len);
+/** @brief Upload encrypted file information
+ * 
+ * @param buf Request data
+ * @param len Request data length
+ * @return Return success information, if failure returns failure information
+ */
+sds js_file_set(char *buf, size_t len);
 
 extern const char *STRFAIL;
 

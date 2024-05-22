@@ -35,7 +35,7 @@ def send_request():
     else:
         print(f'Request failed with status code {response.status_code}')
         print('Response:', response.text)
-    # time.sleep(0.0)
+    time.sleep(0.5)
 
 # 发送 10 次请求
 for _ in range(100000):

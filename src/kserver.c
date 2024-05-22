@@ -65,8 +65,8 @@ static void send_directory_listing(struct mg_connection *conn, const char *dir);
 /**************************API FUNCTION******************************/
 
 struct ApiEntry ApiTable[] = {
-    {"/userregister", "POST", js_user_register_data, redis_user_register},
-    {"/userlogin", "GET", js_user_login_data, NULL}
+    {"/userregister", "POST", js_user_register_data},
+    {"/userget", "POST", js_user_get}
 };
 
 static struct ApiEntry *getApiFunc(const char *uri, const char *method) {
@@ -226,7 +226,7 @@ err:
 static int
 request_handler(struct mg_connection *conn, void *cbdata) {
 	int status;
-    const char *strret = NULL;
+    sds strret = NULL;
 	char response[MAXLEN] = {0};
     char buf[MAXLEN] = {0};
     struct ApiEntry *api = NULL;
@@ -244,8 +244,9 @@ request_handler(struct mg_connection *conn, void *cbdata) {
         api = getApiFunc(ri->local_uri, ri->request_method);
         if (api && ri->content_length > 0) {
             mg_read(conn, buf, sizeof(buf));
-            strret = api->jfunc(buf, strlen(buf), api->dbfunc);
+            strret = api->jfunc(buf, strlen(buf));
             sprintf(response, "%s", strret);
+            sdsfree(strret);
         } else {
             status = HTTP_NOFOUND;
             sprintf(response, "%s", STRFAIL);
@@ -350,6 +351,8 @@ static void initserver() {
     server.init.user_data = NULL;
     server.init.configuration_options = options;
     server.ctx = NULL;
+    server.redisip = "127.0.0.1";
+    server.redisport = 6379;
     server.redis = redis_init("127.0.0.1", 6379);
 
     return;

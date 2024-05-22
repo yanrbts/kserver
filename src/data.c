@@ -30,9 +30,10 @@
 const char *STROK = "{\"flag\":\"OK\", \"msg\":\"success\"}";
 const char *STRFAIL = "{\"flag\":\"FAIL\", \"msg\":\"failed\"}";
 
-const char *js_user_register_data(char *buf, size_t len, redis_data_save dbfunc) {
+sds js_user_register_data(char *buf, size_t len) {
     cJSON *root;
     cJSON *jaction, *jmachine, *juname, *jpwd;
+    sds outdata = NULL;
     Kuser user = {NULL};
 
     root = cJSON_ParseWithLength(buf, len);
@@ -74,32 +75,95 @@ const char *js_user_register_data(char *buf, size_t len, redis_data_save dbfunc)
         log_error("json get object 'password' parse error (%s).", cJSON_GetErrorPtr());
         goto err;
     }
-
     cJSON_Delete(root);
-
     /* save data to redis */
-    if (dbfunc) {
-        if (dbfunc(server.redis, (void*)&user) != 0)
-            goto err;
-    }
+    if (redis_user_register((void*)&user, &outdata) != 0)
+        goto err;
 
     if (user.action) sdsfree(user.action);
     if (user.machine) sdsfree(user.machine);
     if (user.username) sdsfree(user.username);
     if (user.pwd) sdsfree(user.pwd);
 
-    return STROK;
+    return outdata;
 err:
     if (user.action) sdsfree(user.action);
     if (user.machine) sdsfree(user.machine);
     if (user.username) sdsfree(user.username);
     if (user.pwd) sdsfree(user.pwd);
 
-    return STRFAIL;
+    outdata = sdsnew(STRFAIL);
+    return outdata;
 }
 
-const char *js_user_login_data(char *buf, size_t len, redis_data_save dbfunc) {
-    static uint32_t j = 0;
-    printf("[%u] login : %s\n", ++j, buf);
-    return STROK;
+sds js_user_get(char *buf, size_t len) {
+    cJSON *root;
+    cJSON *jm;
+    sds outdata = NULL;
+    sds sm = sdsempty();
+
+    root = cJSON_ParseWithLength(buf, len);
+    if (root == NULL) {
+        log_error("user register json data parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+
+    /* machine */
+    jm = cJSON_GetObjectItem(root, "machine");
+    if (cJSON_IsString(jm) && (jm->valuestring != NULL)) {
+        sm = sdscat(sm, jm->valuestring);
+    } else {
+        log_error("json get object 'action' parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+    cJSON_Delete(root);
+
+    if (redis_get_user((void*)sm, &outdata) != 0) {
+        goto err;
+    }
+
+    sdsfree(sm);
+    return outdata;
+err:
+    sdsfree(sm);
+    outdata = sdsnew(STRFAIL);
+    return outdata;
+}
+
+sds js_file_set(char *buf, size_t len) {
+    cJSON *root;
+    cJSON *jm, *juuid;
+    sds outdata = NULL;
+    Kfile f;
+
+    root = cJSON_ParseWithLength(buf, len);
+    if (root == NULL) {
+        log_error("user register json data parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+
+    /* machine */
+    jm = cJSON_GetObjectItem(root, "machine");
+    if (cJSON_IsString(jm) && (jm->valuestring != NULL)) {
+        f.machine = sdsnew(jm->valuestring);
+    } else {
+        log_error("json file set 'action' parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+    /* file uuid */
+    juuid = cJSON_GetObjectItem(root, "uuid");
+    if (cJSON_IsString(juuid) && (juuid->valuestring != NULL)) {
+        f.uuid = sdsnew(juuid->valuestring);
+    } else {
+        log_error("json file set 'action' parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+    
+    f.data = sdsnew(cJSON_Print(root));
+
+    cJSON_Delete(root);
+
+err:
+    outdata = sdsnew(STRFAIL);
+    return outdata;
 }

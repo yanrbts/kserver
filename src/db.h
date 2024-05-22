@@ -29,16 +29,19 @@
 #define __DB__
 
 typedef enum Kdbtype {
-    REDIS_USER_REGISTER,    /* User registration */
-    REDIS_USER_INFO,        /* Get individual user information */
-    REDIS_USER_ALL_INFO
+    REDIS_USER_REGISTER,        /* User registration */
+    REDIS_USER_GET_INFO,        /* Get individual user information */
+    REDIS_USER_GET_ALL_INFO,
+    REDIS_SET_FILE,             /* upload Encrypt file information*/
+    REDIS_GET_FILE,             /* Get information about a single encrypted file */
+    REDIS_GET_ALL_FILES         /* Get all encrypted file information */
 } Kdbtype;
 
 typedef struct Ksyncredis {
     redisContext *context;
 } Ksyncredis;
 
-typedef void (*synccallback)(redisReply *c, sds *outdata);
+typedef int (*synccallback)(redisReply *c, sds *out);
 struct action {
     Kdbtype type;
     char *cmdline;
@@ -55,10 +58,26 @@ Ksyncredis *redis_init(const char *addr, uint32_t port);
 
 /** @brief Save registered user data
  * 
- * @param redis redis object 
  * @param data struct User object
+ * @param outdate Output data in json format
  * @return Returns 0 on success, -1 otherwise
  */
-int redis_user_register(Ksyncredis *redis, void *data);
+int redis_user_register(void *data, sds *outdata);
+
+/** @brief Get user information
+ * 
+ * @param data struct User object
+ * @param outdate Output data in json format
+ * @return Returns 0 on success, -1 otherwise
+ */
+int redis_get_user(void *data, sds *outdata);
+
+/** @brief upload file information
+ * 
+ * @param data struct file object
+ * @param outdate Output data in json format
+ * @return Returns 0 on success, -1 otherwise
+ */
+int redis_upload_file(void *data, sds *outdata);
 
 #endif

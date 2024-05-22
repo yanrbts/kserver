@@ -58,15 +58,16 @@ struct Server {
     struct mg_error_data error;
     uint64_t clients;                   /* Current number of connections */
     char *system_info;                  /* information on the system. Useful for support requests.*/
+    char *redisip;                      /* redis server ip address */
+    uint32_t redisport;                 /* redis server port */   
     Ksyncredis *redis;                  /* manage redis connect object pointer*/
 };
 
-typedef const char *(*json_parse_handler)(char *buf, size_t len, redis_data_save dbfunc);
+typedef sds (*json_parse_handler)(char *buf, size_t len);
 struct ApiEntry {
     char *uri;                  /* HTTP URI */
     char *method;               /* POST / GET */
     json_parse_handler jfunc;   /* json parsing function */
-    redis_data_save dbfunc;     /* redis data save function */
 };
 
 
