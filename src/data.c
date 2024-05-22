@@ -30,11 +30,13 @@
 const char *STROK = "{\"flag\":\"OK\", \"msg\":\"success\"}";
 const char *STRFAIL = "{\"flag\":\"FAIL\", \"msg\":\"failed\"}";
 
-sds js_user_register_data(char *buf, size_t len) {
+sds kx_user_register(char *buf, size_t len) {
     cJSON *root;
     cJSON *jaction, *jmachine, *juname, *jpwd;
     sds outdata = NULL;
-    Kuser user = {NULL};
+    Kuser user;
+
+    memset(&user, 0, sizeof(Kuser));
 
     root = cJSON_ParseWithLength(buf, len);
 
@@ -96,7 +98,7 @@ err:
     return outdata;
 }
 
-sds js_user_get(char *buf, size_t len) {
+sds kx_user_get(char *buf, size_t len) {
     cJSON *root;
     cJSON *jm;
     sds outdata = NULL;
@@ -130,11 +132,13 @@ err:
     return outdata;
 }
 
-sds js_file_set(char *buf, size_t len) {
+sds kx_file_set(char *buf, size_t len) {
     cJSON *root;
     cJSON *jm, *juuid;
     sds outdata = NULL;
     Kfile f;
+
+    memset(&f, 0, sizeof(Kfile));
 
     root = cJSON_ParseWithLength(buf, len);
     if (root == NULL) {
@@ -160,10 +164,22 @@ sds js_file_set(char *buf, size_t len) {
     }
     
     f.data = sdsnew(cJSON_Print(root));
-
     cJSON_Delete(root);
 
+    if (redis_upload_file((void*)&f, &outdata) != 0) {
+        goto err;
+    }
+
+    if (f.data) sdsfree(f.data);
+    if (f.machine) sdsfree(f.machine);
+    if (f.uuid) sdsfree(f.uuid);
+
+    return outdata;
 err:
+    if (f.data) sdsfree(f.data);
+    if (f.machine) sdsfree(f.machine);
+    if (f.uuid) sdsfree(f.uuid);
+
     outdata = sdsnew(STRFAIL);
     return outdata;
 }

@@ -65,8 +65,11 @@ static void send_directory_listing(struct mg_connection *conn, const char *dir);
 /**************************API FUNCTION******************************/
 
 struct ApiEntry ApiTable[] = {
-    {"/userregister", "POST", js_user_register_data},
-    {"/userget", "POST", js_user_get}
+    {"/userregister", "POST", kx_user_register},
+    {"/userget", "POST", kx_user_get},
+    {"/fileupload", "POST", kx_file_set},
+    {"/file", "POST", kx_file_set},
+    {"/fileall", "POST", kx_file_set}
 };
 
 static struct ApiEntry *getApiFunc(const char *uri, const char *method) {

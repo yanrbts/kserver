@@ -1,0 +1,16 @@
+为了实现文件属主能一次查询所有自己上传的文件信息，需要调整存储结构，使得每个机器码下存储其所有上传文件的 UUID 和相关信息。这可以通过两个步骤来实现：
+
+为每个文件的 UUID 存储其详细信息。
+为每个机器码存储其所有文件的 UUID 列表。
+存储结构设计
+存储文件 UUID 和文件信息：
+
+HSET fileinfo:<file_uuid> filename <filename> filepath <filepath> machine <machine_code>
+存储机器码和文件 UUID 列表：
+
+RPUSH machinefiles:<machine_code> <file_uuid>
+查询文件属主的所有文件信息
+通过机器码查询所有文件 UUID：
+LRANGE machinefiles:<machine_code> 0 -1
+通过每个文件 UUID 查询文件详细信息：
+HGETALL fileinfo:<file_uuid>

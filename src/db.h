@@ -33,6 +33,7 @@ typedef enum Kdbtype {
     REDIS_USER_GET_INFO,        /* Get individual user information */
     REDIS_USER_GET_ALL_INFO,
     REDIS_SET_FILE,             /* upload Encrypt file information*/
+    REDIS_SET_MACHINE_FILE,     /* Record all files belonging to the same machine */
     REDIS_GET_FILE,             /* Get information about a single encrypted file */
     REDIS_GET_ALL_FILES         /* Get all encrypted file information */
 } Kdbtype;

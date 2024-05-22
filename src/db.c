@@ -50,19 +50,21 @@ struct action acs[] = {
      * This command overwrites the values of specified fields that exist in the hash. 
      * If key doesn't exist, a new key holding a hash is created.
      * example:
-     * HSET filekey:machine file1uuid '{"uuid":"file1","filename":"file1.txt","filepath":"/path/to/file1.txt"}' */
+     * HSET filekey:file1uuid file1uuid '{"uuid":"file1","filename":"file1.txt","filepath":"/path/to/file1.txt"}' */
     {.type = REDIS_SET_FILE, .cmdline = "HSET filekey:%s %s %s", .syncexec = kx_post_reply},
+    /* HSET machine:machineuuid file1uuid '{"uuid":"file1","filename":"file1.txt","filepath":"/path/to/file1.txt"}' */
+    {.type = REDIS_SET_MACHINE_FILE, .cmdline = "HSET machine:%s %s %s", .syncexec = kx_post_reply},
     /* HGET key field
      * Returns the value associated with field in the hash stored at key. 
      * example:
-     * HGET user:12345 file1uuid */
+     * HGET filekey:machine file1uuid */
     {.type = REDIS_GET_FILE, .cmdline = "HGET filekey:%s %s", .syncexec = kx_post_reply},
     /* HSCAN key cursor [MATCH pattern] [COUNT count] [NOVALUES]
      * O(1) for every call. O(N) for a complete iteration, including enough 
      * command calls for the cursor to return back to 0. N is the number of 
      * elements inside the collection.
      * example:
-     * HSCAN user:12348 0 count 10 */
+     * HSCAN filekey:machine 0 count 10 */
     {.type = REDIS_GET_ALL_FILES, .cmdline = "HSCAN filekey:%s %d COUNT %d", .syncexec = kx_post_reply}
 };
 
@@ -82,10 +84,27 @@ static struct action *kx_search_action(Kdbtype type) {
  * Returns 0 on success, -1 otherwise */
 static int kx_post_reply(redisReply *reply, sds *out) {
     int ret = -1;
-    if (reply && reply->str) {
-        *out = sdsnewlen(reply->str, reply->len);
-        ret = 0;
+
+    if (reply) {
+        switch (reply->type) {
+        case REDIS_REPLY_INTEGER:
+            {
+                if (reply->integer == 1) {
+                    ret = 0;
+                    *out = sdsnew(STROK);
+                }
+            }
+            break;
+        case REDIS_REPLY_STATUS:
+            {
+                if (strcmp("OK", reply->str) == 0) {
+                    ret = 0;
+                    *out = sdsnew(STROK);
+                } 
+            }
+        }
     }
+
     freeReplyObject(reply);
     return ret;
 }
@@ -164,7 +183,7 @@ static redisReply *kx_sync_send_cmd(redisContext *c, const char *fmt, ...) {
     if (size < 0) {
         goto ret;
     }
-    log_info("cmd : %s", ptr);
+    log_info("%s", ptr);
     reply = kx_command(c, ptr);
 ret:
     if (ptr) zfree(ptr);

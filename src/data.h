@@ -47,16 +47,17 @@ typedef struct Kfile {
     sds data;     /* json data */
 } Kfile;
 
-sds js_user_register_data(char *buf, size_t len);
-sds js_user_get(char *buf, size_t len);
+sds kx_user_register(char *buf, size_t len);
+sds kx_user_get(char *buf, size_t len);
 /** @brief Upload encrypted file information
  * 
  * @param buf Request data
  * @param len Request data length
  * @return Return success information, if failure returns failure information
  */
-sds js_file_set(char *buf, size_t len);
+sds kx_file_set(char *buf, size_t len);
 
 extern const char *STRFAIL;
+extern const char *STROK;
 
 #endif
