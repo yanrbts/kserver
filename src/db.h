@@ -35,7 +35,9 @@ typedef enum Kdbtype {
     REDIS_SET_FILE,             /* upload Encrypt file information*/
     REDIS_SET_MACHINE_FILE,     /* Record all files belonging to the same machine */
     REDIS_GET_FILE,             /* Get information about a single encrypted file */
-    REDIS_GET_ALL_FILES         /* Get all encrypted file information */
+    REDIS_GET_ALL_FILES,        /* Get all encrypted file information */
+    REDIS_SET_TRACE,            /* Upload traceability information */
+    REDIS_GET_TRACE             /* Get traceability information */
 } Kdbtype;
 
 typedef int (*synccallback)(redisReply *c, sds *out);

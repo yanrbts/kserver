@@ -43,6 +43,13 @@
 #define HTTP_ROOT       "./api"
 #define HTTP_PORT       "8099"
 
+char *ascii_logo ="\n" 
+"    __                                      | Version: 1.0.0\n"                       
+"   / /__________  ______   _____  _____     | Port: %d \n"
+"  / //_/ ___/ _ \\/ ___/ | / / _ \\/ ___/     | PID: %ld\n"
+" / ,< (__  )  __/ /   | |/ /  __/ /         | Author: Yanruibing\n"   
+"/_/|_/____/\\___/_/    |___/\\___/_/          | Web: http://www.kxyk.com \n\n";
+
 struct Server server;
 
 static char error_text[256] = {0};
@@ -407,6 +414,8 @@ int main(int argc, char *argv[]) {
     tzset();
     srand(time(NULL)^getpid());
     gettimeofday(&tv,NULL);
+
+    printf(ascii_logo, atoi(HTTP_PORT), (long)getpid());
 
     initserver();
     startserver();
