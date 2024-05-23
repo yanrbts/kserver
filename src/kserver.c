@@ -67,9 +67,9 @@ static void send_directory_listing(struct mg_connection *conn, const char *dir);
 struct ApiEntry ApiTable[] = {
     {"/userregister", "POST", kx_user_register},
     {"/userget", "POST", kx_user_get},
-    {"/fileupload", "POST", kx_file_set},
-    {"/file", "POST", kx_file_set},
-    {"/fileall", "POST", kx_file_set}
+    {"/fileset", "POST", kx_file_set},
+    {"/fileget", "POST", kx_file_get},
+    {"/filegetall", "POST", kx_file_getall}
 };
 
 static struct ApiEntry *getApiFunc(const char *uri, const char *method) {
@@ -249,6 +249,9 @@ request_handler(struct mg_connection *conn, void *cbdata) {
             mg_read(conn, buf, sizeof(buf));
             strret = api->jfunc(buf, strlen(buf));
             sprintf(response, "%s", strret);
+
+            /* The return data must be released here, 
+             * otherwise a memory leak will occur */
             sdsfree(strret);
         } else {
             status = HTTP_NOFOUND;
@@ -356,7 +359,6 @@ static void initserver() {
     server.ctx = NULL;
     server.redisip = "127.0.0.1";
     server.redisport = 6379;
-    server.redis = redis_init("127.0.0.1", 6379);
 
     return;
 err:
@@ -385,8 +387,6 @@ static void stopserver() {
     if (server.ctx) 
         mg_stop(server.ctx);
     free(server.system_info);
-    redisFree(server.redis->context);
-    zfree(server.redis);
     mg_exit_library();
 }
 

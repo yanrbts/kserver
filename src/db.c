@@ -27,8 +27,13 @@
  */
 #include "kserver.h"
 
+/* The number of data items obtained per page in paging */
+#define PAGENUM 20
+
 static int kx_post_reply(redisReply *reply, sds *out);
 static int kx_hgetall_userinfo(redisReply *reply, sds *out);
+static int kx_hget_file(redisReply *reply, sds *out);
+static int kx_hscan_files(redisReply *reply, sds *out);
 
 struct action acs[] = {
     /* redis HMSET key field value [field value ...]
@@ -58,14 +63,14 @@ struct action acs[] = {
      * Returns the value associated with field in the hash stored at key. 
      * example:
      * HGET filekey:machine file1uuid */
-    {.type = REDIS_GET_FILE, .cmdline = "HGET filekey:%s %s", .syncexec = kx_post_reply},
+    {.type = REDIS_GET_FILE, .cmdline = "HGET filekey:%s %s", .syncexec = kx_hget_file},
     /* HSCAN key cursor [MATCH pattern] [COUNT count] [NOVALUES]
      * O(1) for every call. O(N) for a complete iteration, including enough 
      * command calls for the cursor to return back to 0. N is the number of 
      * elements inside the collection.
      * example:
-     * HSCAN filekey:machine 0 count 10 */
-    {.type = REDIS_GET_ALL_FILES, .cmdline = "HSCAN filekey:%s %d COUNT %d", .syncexec = kx_post_reply}
+     * HSCAN machine:machineuuid 0 count 10 */
+    {.type = REDIS_GET_ALL_FILES, .cmdline = "HSCAN machine:%s %d COUNT %d", .syncexec = kx_hscan_files}
 };
 
 #define ACSIZE sizeof(acs)/sizeof(acs[0])
@@ -125,7 +130,7 @@ static int kx_hgetall_userinfo(redisReply *reply, sds *out) {
 
         if (json == NULL) {
             log_error("HGETALL user info to create JSON object\n");
-            goto ret;
+            goto end;
         }
         
         for (size_t i = 0; i < reply->elements; i += 2) {
@@ -134,16 +139,87 @@ static int kx_hgetall_userinfo(redisReply *reply, sds *out) {
             n = cJSON_CreateString(reply->element[i+1]->str);
             cJSON_AddItemToObject(json, reply->element[i]->str, n);
         }
-        /* The flag flag is a flag used to determine whether there is data. 
+        /* The flag is a flag used to determine whether there is data. 
          * If there is data, data is returned. If there is no data, NULL 
          * is returned.*/
         if (flag) {
-            *out = sdsnew(cJSON_Print(json));
+            char *jstr = cJSON_Print(json);
+            *out = sdsnew(jstr);
+            free(jstr);
             ret = 0;
         }   
     }
-ret:
+end:
     if (json) cJSON_Delete(json);
+    freeReplyObject(reply);
+    return ret;
+}
+
+/* Query single file information through file uuid 
+ * and obtain returned file data ,
+ * Returns 0 on success, -1 otherwise*/
+static int kx_hget_file(redisReply *reply, sds *out) {
+    int ret = -1;
+
+    if (reply && reply->type == REDIS_REPLY_STRING) {
+        *out = sdsnew(reply->str);
+        ret = 0;
+    } else if (reply->type == REDIS_REPLY_NIL) {
+        *out = sdsnew(STRNOFOUND);
+    }
+    freeReplyObject(reply);
+    return ret;
+}
+
+/* Parse HSCAN query file list
+ * Returns 0 on success, -1 otherwise */
+static int kx_hscan_files(redisReply *reply, sds *out) {
+    int ret = -1;
+    unsigned long long cursor = 0;
+    redisReply *keys;
+    cJSON *root = NULL;
+    cJSON *files = NULL;
+
+    cursor = strtoull(reply->element[0]->str, NULL, 10);
+    keys = reply->element[1];
+    if (keys->type != REDIS_REPLY_ARRAY) {
+        log_error("Invalid keys array in HSCAN reply");
+        goto end;
+    }
+
+    root = cJSON_CreateObject();
+    if (root == NULL) {
+        log_error("HSCAN reply Failed to create cJSON object");
+        goto end;
+    }
+
+    cJSON_AddNumberToObject(root, "page", cursor);
+
+    files = cJSON_CreateArray();
+    if (files == NULL) {
+        log_error("Failed to create files array");
+        goto end;
+    }
+    cJSON_AddItemToObject(root, "files", files);
+
+    if (reply->type == REDIS_REPLY_ARRAY) {
+        for (size_t i = 0; i < keys->elements; i += 2) {
+            redisReply *key = keys->element[i];
+            redisReply *value = keys->element[i + 1];
+            if (key->type == REDIS_REPLY_STRING && value->type == REDIS_REPLY_STRING) {
+                cJSON_AddItemToArray(files, cJSON_Parse(value->str));
+                ret = 0;
+            }
+        }
+        char *jstr = cJSON_Print(root);
+        *out = sdsnew(jstr);
+        free(jstr);
+    } else if (reply->type == REDIS_REPLY_NIL) {
+        *out = sdsnew(STRNOFOUND);
+    }
+    
+end:
+    if (root) cJSON_Delete(root);
     freeReplyObject(reply);
     return ret;
 }
@@ -207,28 +283,6 @@ static redisContext *create_redis_ctx() {
         exit(1);
     }
     return ctx;
-}
-
-Ksyncredis *redis_init(const char *addr, uint32_t port) {
-    struct timeval timeout = {20, 500000}; // 1.5 seconds
-
-    Ksyncredis *redis = zmalloc(sizeof(*redis));
-    if (redis == NULL) {
-        log_error("zmalloc Ksyncredis error");
-        exit(1);
-    }
-
-    redis->context = redisConnectWithTimeout(addr, port, timeout);
-    if (redis->context == NULL || redis->context->err) {
-        if (redis->context) {
-            log_error("redis Connection error: %s", redis->context->errstr);
-            redisFree(redis->context);
-        } else {
-            log_error("redis Connection error: can't allocate redis context");
-        }
-        exit(1);
-    }
-    return redis;
 }
 
 int redis_user_register(void *data, sds *outdata) {
@@ -306,9 +360,98 @@ int redis_upload_file(void *data, sds *outdata) {
         if (ac) {
             reply = kx_sync_send_cmd(ctx,
                                 ac->cmdline, 
+                                f->uuid,
+                                f->uuid,
+                                f->data);
+            if (ac->syncexec(reply, outdata) == 0) {
+                redisFree(ctx);
+                return 0;
+            } 
+        }
+        redisFree(ctx);
+    }
+    return -1;
+}
+
+int redis_upload_machine_file(void *data, sds *outdata) {
+    struct action   *ac = NULL;
+    redisReply      *reply = NULL;
+    redisContext    *ctx;
+    Kfile           *f;
+
+    f = (Kfile*)data;
+    if (f == NULL) {
+        return -1;
+    }
+
+    ctx = create_redis_ctx();
+    if (ctx) {
+        ac = kx_search_action(REDIS_SET_MACHINE_FILE);
+        if (ac) {
+            reply = kx_sync_send_cmd(ctx,
+                                ac->cmdline, 
                                 f->machine,
                                 f->uuid,
                                 f->data);
+            if (ac->syncexec(reply, outdata) == 0) {
+                redisFree(ctx);
+                return 0;
+            } 
+        }
+        redisFree(ctx);
+    }
+    return -1;
+}
+
+int redis_get_file(void *data, sds *outdata) {
+    struct action   *ac = NULL;
+    redisReply      *reply = NULL;
+    redisContext    *ctx;
+    sds             uuid;
+
+    uuid = (sds)data;
+    if (uuid == NULL) {
+        return -1;
+    }
+
+    ctx = create_redis_ctx();
+    if (ctx) {
+        ac = kx_search_action(REDIS_GET_FILE);
+        if (ac) {
+            reply = kx_sync_send_cmd(ctx,
+                                ac->cmdline, 
+                                uuid,
+                                uuid);
+            if (ac->syncexec(reply, outdata) == 0) {
+                redisFree(ctx);
+                return 0;
+            } 
+        }
+        redisFree(ctx);
+    }
+    return -1;
+}
+
+int redis_get_fileall(void *data, sds *outdata) {
+    struct action   *ac = NULL;
+    redisReply      *reply = NULL;
+    redisContext    *ctx;
+    Kfileall        *fs;
+
+    fs = (Kfileall*)data;
+    if (fs == NULL) {
+        return -1;
+    }
+
+    ctx = create_redis_ctx();
+    if (ctx) {
+        ac = kx_search_action(REDIS_GET_ALL_FILES);
+        if (ac) {
+            reply = kx_sync_send_cmd(ctx,
+                                ac->cmdline, 
+                                fs->machine,
+                                fs->page,
+                                PAGENUM);
             if (ac->syncexec(reply, outdata) == 0) {
                 redisFree(ctx);
                 return 0;

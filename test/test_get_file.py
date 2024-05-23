@@ -8,14 +8,11 @@ def generate_random_machine_code(length=32):
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
 
 # 目标 URL
-url = 'http://127.0.0.1:8099/fileset'  # 请替换为实际的服务器 URL
+url = 'http://127.0.0.1:8099/fileget'  # 请替换为实际的服务器 URL
 
 # 要发送的 JSON 数据
 data = {
-    "filename":"file5",
-    "uuid":"file1uuid5",
-    "filepath":"/path/to/file5.txt",
-    "machine":"f526255265340d994510f8d1652e1eb3"
+    "uuid":"file1uuid2"
 }
 
 # 将字典转换为 JSON 字符串

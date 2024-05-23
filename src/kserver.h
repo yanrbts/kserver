@@ -59,8 +59,7 @@ struct Server {
     uint64_t clients;                   /* Current number of connections */
     char *system_info;                  /* information on the system. Useful for support requests.*/
     char *redisip;                      /* redis server ip address */
-    uint32_t redisport;                 /* redis server port */   
-    Ksyncredis *redis;                  /* manage redis connect object pointer*/
+    uint32_t redisport;                 /* redis server port */
 };
 
 typedef sds (*json_parse_handler)(char *buf, size_t len);

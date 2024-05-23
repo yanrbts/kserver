@@ -29,10 +29,11 @@
 
 const char *STROK = "{\"flag\":\"OK\", \"msg\":\"success\"}";
 const char *STRFAIL = "{\"flag\":\"FAIL\", \"msg\":\"failed\"}";
+const char *STRNOFOUND = "{\"flag\":\"NOFOUND\", \"msg\":\"File not found\"}";
 
 sds kx_user_register(char *buf, size_t len) {
-    cJSON *root;
-    cJSON *jaction, *jmachine, *juname, *jpwd;
+    cJSON *root = NULL;
+    cJSON *jmachine, *juname, *jflag;
     sds outdata = NULL;
     Kuser user;
 
@@ -45,20 +46,12 @@ sds kx_user_register(char *buf, size_t len) {
         goto err;
     }
 
-    /* action */
-    jaction = cJSON_GetObjectItem(root, "action");
-    if (cJSON_IsString(jaction) && (jaction->valuestring != NULL)) {
-        user.action = sdsnew(jaction->valuestring);
-    } else {
-        log_error("json get object 'action' parse error (%s).", cJSON_GetErrorPtr());
-        goto err;
-    }
     /* machine */
     jmachine = cJSON_GetObjectItem(root, "machine");
     if (cJSON_IsString(jmachine) && (jmachine->valuestring != NULL)) {
         user.machine = sdsnew(jmachine->valuestring);
     } else {
-        log_error("json get object 'machine' parse error (%s).", cJSON_GetErrorPtr());
+        log_error("json user register object 'machine' parse error (%s).", cJSON_GetErrorPtr());
         goto err;
     }
     /* username */
@@ -66,33 +59,67 @@ sds kx_user_register(char *buf, size_t len) {
     if (cJSON_IsString(juname) && (juname->valuestring != NULL)) {
         user.username = sdsnew(juname->valuestring);
     } else {
-        log_error("json get object 'username' parse error (%s).", cJSON_GetErrorPtr());
+        log_error("json user register object 'username' parse error (%s).", cJSON_GetErrorPtr());
         goto err;
     }
-    /* password */
-    jpwd = cJSON_GetObjectItem(root, "password");
-    if (cJSON_IsString(jpwd) && (jpwd->valuestring != NULL)) {
-        user.pwd = sdsnew(jpwd->valuestring);
+    /* flag */
+    jflag = cJSON_GetObjectItem(root, "flag");
+    if (cJSON_IsNumber(jflag)) {
+        user.flag = jflag->valueint;
     } else {
-        log_error("json get object 'password' parse error (%s).", cJSON_GetErrorPtr());
+        log_error("json user register object 'flag' parse error (%s).", cJSON_GetErrorPtr());
         goto err;
     }
-    cJSON_Delete(root);
-    /* save data to redis */
-    if (redis_user_register((void*)&user, &outdata) != 0)
-        goto err;
+    /* Login logic 1. First determine whether the flag is 1. 
+     * If flag=1, insert new user information directly. 
+     * 
+     * If flag=0, first check whether the user information exists. 
+     * If it exists, it will be directly returned to the client. 
+     * If it does not exist, insert it and send it to the client. user information*/
+    if (user.flag == 1) {
+        /* insert new user information directly */
+        if (redis_user_register((void*)&user, &outdata) != 0) {
+            goto err;
+        } else {
+            /* User data inserted successfully */
+            sdsfree(outdata);
+            outdata = NULL;
+            cJSON_DeleteItemFromObject(root, "flag");
+            char *jstr = cJSON_Print(root);
+            outdata = sdsnew(jstr);
+            free(jstr);
+            log_info("(%s) User register successfully.", user.username);
+        }
+    } else {
+        if (redis_get_user((void*)user.machine, &outdata) != 0) {
+            /* No user data was found, insert user data */
+            if (redis_user_register((void*)&user, &outdata) != 0) {
+                log_error("(%s) User register failed.", user.username);
+                goto err;
+            } else {
+                /* User data inserted successfully */
+                sdsfree(outdata);
+                outdata = NULL;
+                cJSON_DeleteItemFromObject(root, "flag");
+                char *jstr = cJSON_Print(root);
+                outdata = sdsnew(jstr);
+                free(jstr);
+                log_info("(%s) User register successfully.", user.username);
+            }
+        } else {
+            log_info("(%s) User already exists", user.username);
+        }
+    }
 
-    if (user.action) sdsfree(user.action);
     if (user.machine) sdsfree(user.machine);
     if (user.username) sdsfree(user.username);
-    if (user.pwd) sdsfree(user.pwd);
+    cJSON_Delete(root);
 
     return outdata;
 err:
-    if (user.action) sdsfree(user.action);
     if (user.machine) sdsfree(user.machine);
     if (user.username) sdsfree(user.username);
-    if (user.pwd) sdsfree(user.pwd);
+    if (root) cJSON_Delete(root);
 
     outdata = sdsnew(STRFAIL);
     return outdata;
@@ -133,7 +160,7 @@ err:
 }
 
 sds kx_file_set(char *buf, size_t len) {
-    cJSON *root;
+    cJSON *root = NULL;
     cJSON *jm, *juuid;
     sds outdata = NULL;
     Kfile f;
@@ -163,23 +190,117 @@ sds kx_file_set(char *buf, size_t len) {
         goto err;
     }
     
-    f.data = sdsnew(cJSON_Print(root));
-    cJSON_Delete(root);
-
+    char *jstr = cJSON_Print(root);
+    f.data = sdsnew(jstr);
+    free(jstr);
+    
     if (redis_upload_file((void*)&f, &outdata) != 0) {
+        goto err;
+    } else {
+        sdsfree(outdata);
+        outdata = NULL;
+    }
+
+    /* Save file information to the hash table belonging 
+     * to the machine for easy traversal*/
+    if (redis_upload_machine_file((void*)&f, &outdata) != 0) {
         goto err;
     }
 
     if (f.data) sdsfree(f.data);
     if (f.machine) sdsfree(f.machine);
     if (f.uuid) sdsfree(f.uuid);
+    cJSON_Delete(root);
 
     return outdata;
 err:
+    if (root) cJSON_Delete(root);
     if (f.data) sdsfree(f.data);
     if (f.machine) sdsfree(f.machine);
     if (f.uuid) sdsfree(f.uuid);
 
+    outdata = sdsnew(STRFAIL);
+    return outdata;
+}
+
+sds kx_file_get(char *buf, size_t len) {
+    cJSON *root;
+    cJSON *jm;
+    sds outdata = NULL;
+    sds sm = sdsempty();
+
+    root = cJSON_ParseWithLength(buf, len);
+    if (root == NULL) {
+        log_error("file get json data parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+
+    /* file uuid */
+    jm = cJSON_GetObjectItem(root, "uuid");
+    if (cJSON_IsString(jm) && (jm->valuestring != NULL)) {
+        sm = sdscat(sm, jm->valuestring);
+    } else {
+        log_error("json file get object 'uuid' parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+    cJSON_Delete(root);
+
+    if (redis_get_file((void*)sm, &outdata) != 0) {
+        goto err;
+    }
+
+    sdsfree(sm);
+    return outdata;
+err:
+    sdsfree(sm);
+    outdata = sdsnew(STRFAIL);
+    return outdata;
+}
+
+sds kx_file_getall(char *buf, size_t len) {
+    cJSON *root = NULL;
+    cJSON *jm, *jp;
+    sds outdata = NULL;
+    Kfileall fs;
+
+    memset(&fs, 0, sizeof(Kfileall));
+
+    root = cJSON_ParseWithLength(buf, len);
+    if (root == NULL) {
+        log_error("file getall json data parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+
+    /* machine uuid */
+    jm = cJSON_GetObjectItem(root, "machine");
+    if (cJSON_IsString(jm) && (jm->valuestring != NULL)) {
+        fs.machine = sdsnew(jm->valuestring);
+    } else {
+        log_error("json file getall object 'machine' parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+
+    /* page number */
+    jp = cJSON_GetObjectItem(root, "page");
+    if (cJSON_IsNumber(jp)) {
+        fs.page = jp->valueint;
+    } else {
+        log_error("json file getall object 'page' parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+    
+    if (redis_get_fileall((void*)&fs, &outdata) != 0) {
+        goto err;
+    }
+
+    if (fs.machine) sdsfree(fs.machine);
+    cJSON_Delete(root);
+
+    return outdata;
+
+err:
+    if (root) cJSON_Delete(root);
+    if (fs.machine) sdsfree(fs.machine);
     outdata = sdsnew(STRFAIL);
     return outdata;
 }

@@ -38,24 +38,12 @@ typedef enum Kdbtype {
     REDIS_GET_ALL_FILES         /* Get all encrypted file information */
 } Kdbtype;
 
-typedef struct Ksyncredis {
-    redisContext *context;
-} Ksyncredis;
-
 typedef int (*synccallback)(redisReply *c, sds *out);
 struct action {
     Kdbtype type;
     char *cmdline;
     synccallback syncexec;
 };
-
-/** @brief Init redis context Create redis sync link object
- * 
- * @param addr redis-server ip address eg. : 127.0.0.1
- * @param port redis-server port eg. : 6790
- * @return Returns the created object, or NULL if failed
- */
-Ksyncredis *redis_init(const char *addr, uint32_t port);
 
 /** @brief Save registered user data
  * 
@@ -73,12 +61,40 @@ int redis_user_register(void *data, sds *outdata);
  */
 int redis_get_user(void *data, sds *outdata);
 
-/** @brief upload file information
+/** @brief Record the information of a single encrypted file 
+ *         so that it can be easily obtained when querying the owner.
  * 
  * @param data struct file object
  * @param outdate Output data in json format
  * @return Returns 0 on success, -1 otherwise
  */
 int redis_upload_file(void *data, sds *outdata);
+
+/** @brief Record encrypted files on the same machine. 
+ *         In order to recover data, it is generally used 
+ *         together with the redis_upload_file interface.
+ * 
+ * @param data struct file object
+ * @param outdate Output data in json format
+ * @return Returns 0 on success, -1 otherwise
+ */
+int redis_upload_machine_file(void *data, sds *outdata);
+
+/** @brief Obtain the information of a single encrypted file 
+ *         and call it when the file applies for authorization.
+ * 
+ * @param data file uuid
+ * @param outdate Output data in json format
+ * @return Returns 0 on success, -1 otherwise
+ */
+int redis_get_file(void *data, sds *outdata);
+
+/** @brief Get information about all encrypted files on a machine
+ * 
+ * @param data Kfileall object
+ * @param outdate Output data in json format
+ * @return Returns 0 on success, -1 otherwise
+ */
+int redis_get_fileall(void *data, sds *outdata);
 
 #endif

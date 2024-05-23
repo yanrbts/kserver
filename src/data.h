@@ -32,13 +32,13 @@
 #include "sds.h"
 #include "db.h"
 
-typedef int (*redis_data_save)(Ksyncredis *redis, void *data);
-
 typedef struct Kuser {
-    sds action;   /* function action (REGISTER or LOGIN) */
-    sds machine;  /* machine code (uuid)*/
-    sds username; /* username */
-    sds pwd;      /* password */
+    sds machine;    /* machine code (uuid) */
+    sds username;   /* username */
+    uint16_t flag;  /* If it is 1, modify the data directly, 
+                     * otherwise return the queried data. 
+                     * If the inserted data is not queried, 
+                     * then return the inserted data.*/
 } Kuser;
 
 typedef struct Kfile {
@@ -46,6 +46,11 @@ typedef struct Kfile {
     sds uuid;     /* file uuid */
     sds data;     /* json data */
 } Kfile;
+
+typedef struct Kfileall {
+    sds machine;    /* machine code (uuid)*/
+    uint32_t page;  /* Page number */
+} Kfileall;
 
 sds kx_user_register(char *buf, size_t len);
 sds kx_user_get(char *buf, size_t len);
@@ -57,7 +62,25 @@ sds kx_user_get(char *buf, size_t len);
  */
 sds kx_file_set(char *buf, size_t len);
 
+/** @brief Get encrypted file information
+ * 
+ * @param buf Request data
+ * @param len Request data length
+ * @return Return success information, if failure returns failure information
+ */
+sds kx_file_get(char *buf, size_t len);
+
+/** @brief Get all encrypted file information on the same machine
+ * 
+ * @param buf Request data (machine uudid)
+ * @param len Request data length
+ * @return Return success information, if failure returns failure information
+ * @warning Data needs to be returned in pages, and each page requires a maximum of 20 pieces of data.
+ */
+sds kx_file_getall(char *buf, size_t len);
+
 extern const char *STRFAIL;
 extern const char *STROK;
+extern const char *STRNOFOUND;
 
 #endif
