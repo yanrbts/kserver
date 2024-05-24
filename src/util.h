@@ -25,57 +25,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __KSERVER__
-#define __KSERVER__
+#ifndef __UTIL__
+#define __UTIL__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <limits.h>
-#include <unistd.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <pthread.h>
-#include <netinet/in.h>
-#include <signal.h>
-#include <pthread.h>
-#include <civetweb.h>
-#include <hiredis.h>
-
-#include "zmalloc.h"
+#include <stdint.h>
 #include "sds.h"
-#include "cJSON.h"
-#include "data.h"
-#include "db.h"
-#include "util.h"
-#include "log.h"
 
-struct Server {
-    struct mg_init_data init;
-    struct mg_callbacks callbacks;
-	struct mg_context *ctx;
-    struct mg_server_port ports[32];
-    struct mg_error_data error;
-    uint64_t clients;                   /* Current number of connections */
-    char *system_info;                  /* information on the system. Useful for support requests.*/
-    char *redisip;                      /* redis server ip address */
-    uint32_t redisport;                 /* redis server port */
-    char *configfile;                   /* Absolute config file path, or NULL */
-};
-
-typedef sds (*json_parse_handler)(char *buf, size_t len);
-struct ApiEntry {
-    char *uri;                  /* HTTP URI */
-    char *method;               /* POST / GET */
-    json_parse_handler jfunc;   /* json parsing function */
-};
-
-
-/*-----------------------------------------------------------------------------
- * Extern declarations
- *----------------------------------------------------------------------------*/
-
-extern struct Server server;
+sds getAbsolutePath(char *filename);
 
 #endif

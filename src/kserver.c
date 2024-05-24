@@ -399,6 +399,7 @@ static void stopserver() {
 
 int main(int argc, char *argv[]) {
     struct timeval tv;
+    char *configfile;
 
     /* The setlocale() function is used to set or query the program's current locale.
      * 
@@ -416,6 +417,11 @@ int main(int argc, char *argv[]) {
     gettimeofday(&tv,NULL);
 
     printf(ascii_logo, atoi(HTTP_PORT), (long)getpid());
+
+    if (argc >= 2) {
+        configfile = argv[1];
+        server.configfile = getAbsolutePath(configfile);
+    }
 
     initserver();
     startserver();
