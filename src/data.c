@@ -304,3 +304,99 @@ err:
     outdata = sdsnew(STRFAIL);
     return outdata;
 }
+
+sds kx_trace_set(char *buf, size_t len) {
+    cJSON *root = NULL;
+    cJSON *ju;
+    sds outdata = NULL;
+    Ktrace ft;
+
+    memset(&ft, 0, sizeof(Ktrace));
+
+    root = cJSON_ParseWithLength(buf, len);
+    if (root == NULL) {
+        log_error("file trace set, json data parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+
+    /* file uuid */
+    ju = cJSON_GetObjectItem(root, "uuid");
+    if (cJSON_IsString(ju) && (ju->valuestring != NULL)) {
+        ft.uuid = sdsnew(ju->valuestring);
+    } else {
+        log_error("file trace set, get object 'uuid' parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+
+    /* HSET filekey:fileuuid trace:1798000,*/
+    ft.tracefield = sdsnew("trace:");
+    ft.tracefield = sdscatfmt(ft.tracefield, "%U", ustime());
+
+    char *jstr = cJSON_Print(root);
+    ft.data = sdsnew(jstr);
+    free(jstr);
+
+    if (redis_set_trace((void*)&ft, &outdata) != 0)
+        goto err;
+
+    if (ft.uuid) sdsfree(ft.uuid);
+    if (ft.tracefield) sdsfree(ft.tracefield);
+    if (ft.data) sdsfree(ft.data);
+    cJSON_Delete(root);
+    return outdata;
+
+err:
+    if (root) cJSON_Delete(root);
+    if (ft.uuid) sdsfree(ft.uuid);
+    if (ft.tracefield) sdsfree(ft.tracefield);
+    outdata = sdsnew(STRFAIL);
+    return outdata;
+}
+
+sds kx_trace_get(char *buf, size_t len) {
+    cJSON *root = NULL;
+    cJSON *jt, *jp;
+    sds outdata = NULL;
+    Kgettrace fg;
+
+    memset(&fg, 0, sizeof(Kgettrace));
+
+    root = cJSON_ParseWithLength(buf, len);
+    if (root == NULL) {
+        log_error("trace json data parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+
+    /* file uuid */
+    jt = cJSON_GetObjectItem(root, "uuid");
+    if (cJSON_IsString(jt) && (jt->valuestring != NULL)) {
+        fg.uuid = sdsnew(jt->valuestring);
+    } else {
+        log_error("json trace object 'uuid' parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+
+    /* page number */
+    jp = cJSON_GetObjectItem(root, "page");
+    if (cJSON_IsNumber(jp)) {
+        fg.page = jp->valueint;
+    } else {
+        log_error("json trace object 'page' parse error (%s).", cJSON_GetErrorPtr());
+        goto err;
+    }
+    
+    if (redis_get_trace((void*)&fg, &outdata) != 0) {
+        goto err;
+    }
+
+    if (fg.uuid) sdsfree(fg.uuid);
+    cJSON_Delete(root);
+
+    return outdata;
+
+err:
+    if (root) cJSON_Delete(root);
+    if (fg.uuid) sdsfree(fg.uuid);
+    outdata = sdsnew(STRFAIL);
+    return outdata;
+}

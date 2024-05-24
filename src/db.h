@@ -99,4 +99,20 @@ int redis_get_file(void *data, sds *outdata);
  */
 int redis_get_fileall(void *data, sds *outdata);
 
+/** @brief Upload traceability information
+ * 
+ * @param data Ktrace object
+ * @param outdate Output data in json format
+ * @return Returns 0 on success, -1 otherwise
+ */
+int redis_set_trace(void *data, sds *outdata);
+
+/** @brief Get traceability information
+ * 
+ * @param data Kfileall object
+ * @param outdate Output data in json format
+ * @return Returns 0 on success, -1 otherwise
+ */
+int redis_get_trace(void *data, sds *outdata);
+
 #endif

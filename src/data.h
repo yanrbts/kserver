@@ -52,6 +52,17 @@ typedef struct Kfileall {
     uint32_t page;  /* Page number */
 } Kfileall;
 
+typedef struct Ktrace {
+    sds uuid;           /* file uuid */
+    sds tracefield;     /* trace field */
+    sds data;
+} Ktrace;
+
+typedef struct Kgettrace {
+    sds uuid;       /* file uuid */
+    uint32_t page;  /* Page number */
+} Kgettrace;
+
 sds kx_user_register(char *buf, size_t len);
 sds kx_user_get(char *buf, size_t len);
 /** @brief Upload encrypted file information
@@ -78,6 +89,23 @@ sds kx_file_get(char *buf, size_t len);
  * @warning Data needs to be returned in pages, and each page requires a maximum of 20 pieces of data.
  */
 sds kx_file_getall(char *buf, size_t len);
+
+/** @brief Upload traceability information
+ * 
+ * @param buf Request data (machine uudid)
+ * @param len Request data length
+ * @return Return success information, if failure returns failure information
+ */
+sds kx_trace_set(char *buf, size_t len);
+
+/** @brief Get file traceability information
+ * 
+ * @param buf Request data
+ * @param len Request data length
+ * @return Return traceability information, if failure returns failure information
+ * @warning Data needs to be returned in pages, and each page requires a maximum of 20 pieces of data.
+ */
+sds kx_trace_get(char *buf, size_t len);
 
 extern const char *STRFAIL;
 extern const char *STROK;

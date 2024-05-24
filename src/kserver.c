@@ -73,10 +73,12 @@ static void send_directory_listing(struct mg_connection *conn, const char *dir);
 
 struct ApiEntry ApiTable[] = {
     {"/userregister", "POST", kx_user_register},
-    {"/userget", "POST", kx_user_get},
+    // {"/userget", "POST", kx_user_get},
     {"/fileset", "POST", kx_file_set},
     {"/fileget", "POST", kx_file_get},
-    {"/filegetall", "POST", kx_file_getall}
+    {"/filegetall", "POST", kx_file_getall},
+    {"/filesettrace", "POST", kx_trace_set},
+    {"/filegettrace", "POST", kx_trace_get}
 };
 
 static struct ApiEntry *getApiFunc(const char *uri, const char *method) {
@@ -236,8 +238,7 @@ err:
 static int
 request_handler(struct mg_connection *conn, void *cbdata) {
 	int status;
-    sds strret = NULL;
-	char response[MAXLEN] = {0};
+    sds response = NULL;
     char buf[MAXLEN] = {0};
     struct ApiEntry *api = NULL;
     const struct mg_request_info *ri = NULL;
@@ -254,29 +255,30 @@ request_handler(struct mg_connection *conn, void *cbdata) {
         api = getApiFunc(ri->local_uri, ri->request_method);
         if (api && ri->content_length > 0) {
             mg_read(conn, buf, sizeof(buf));
-            strret = api->jfunc(buf, strlen(buf));
-            sprintf(response, "%s", strret);
 
             /* The return data must be released here, 
              * otherwise a memory leak will occur */
-            sdsfree(strret);
+            response = api->jfunc(buf, strlen(buf));
         } else {
             status = HTTP_NOFOUND;
-            sprintf(response, "%s", STRFAIL);
+            response = sdsnew(STRFAIL);
         }
     } else {
         status = HTTP_NOFOUND; /* 404 = Not Found */
         /* We don't like this URL */
-		sprintf(response, "%s", STRFAIL);
+        response = sdsnew(STRFAIL);
     }
-    content_len = strlen(response);
+    content_len = sdslen(response);
     
     /* Returns:
      * 0: the handler could not handle the request, so fall through.
      * 1 - 999: the handler processed the request. The return code is
      * stored as a HTTP status code for the access log. */
-	if (ksresponse(conn, response, content_len, status) != -1)
+	if (ksresponse(conn, response, content_len, status) != -1) {
+        sdsfree(response);
         return status;
+    }
+    sdsfree(response);
     return 0;
 }
 
@@ -395,6 +397,18 @@ static void stopserver() {
         mg_stop(server.ctx);
     free(server.system_info);
     mg_exit_library();
+}
+/*********************************EXPORT FUNCTION*******************************/
+
+/* Return the UNIX time in microseconds */
+long long ustime(void) {
+    struct timeval tv;
+    long long ust;
+
+    gettimeofday(&tv, NULL);
+    ust = ((long long)tv.tv_sec)*1000000;
+    ust += tv.tv_usec;
+    return ust;
 }
 
 int main(int argc, char *argv[]) {

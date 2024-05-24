@@ -34,6 +34,7 @@ static int kx_post_reply(redisReply *reply, sds *out);
 static int kx_hgetall_userinfo(redisReply *reply, sds *out);
 static int kx_hget_file(redisReply *reply, sds *out);
 static int kx_hscan_files(redisReply *reply, sds *out);
+static int kx_hscan_traces(redisReply *reply, sds *out);
 
 struct action acs[] = {
     /* redis HMSET key field value [field value ...]
@@ -70,7 +71,16 @@ struct action acs[] = {
      * elements inside the collection.
      * example:
      * HSCAN machine:machineuuid 0 count 10 */
-    {.type = REDIS_GET_ALL_FILES, .cmdline = "HSCAN machine:%s %d COUNT %d", .syncexec = kx_hscan_files}
+    {.type = REDIS_GET_ALL_FILES, .cmdline = "HSCAN machine:%s %d COUNT %d", .syncexec = kx_hscan_files},
+    /* HSET key field value [field value ...]
+     * Sets the specified fields to their respective values in the hash stored at key.
+     * This command overwrites the values of specified fields that exist in the hash. 
+     * If key doesn't exist, a new key holding a hash is created.
+     * example:
+     * HSET filekey:fileuuid trace:1798000 '{"uuid":"file1","username":"username","time":"2024-05-06", "action":1}' */
+    {.type = REDIS_SET_TRACE, .cmdline = "HSET filekey:%s %s %s", .syncexec = kx_post_reply},
+    /* HSCAN filekey:fileuuis 0 match trace:* count 10 */
+    {.type = REDIS_GET_TRACE, .cmdline = "HSCAN filekey:%s %d MATCH trace:* COUNT %d", .syncexec = kx_hscan_traces},
 };
 
 #define ACSIZE sizeof(acs)/sizeof(acs[0])
@@ -208,6 +218,59 @@ static int kx_hscan_files(redisReply *reply, sds *out) {
             redisReply *value = keys->element[i + 1];
             if (key->type == REDIS_REPLY_STRING && value->type == REDIS_REPLY_STRING) {
                 cJSON_AddItemToArray(files, cJSON_Parse(value->str));
+                ret = 0;
+            }
+        }
+        char *jstr = cJSON_Print(root);
+        *out = sdsnew(jstr);
+        free(jstr);
+    } else if (reply->type == REDIS_REPLY_NIL) {
+        *out = sdsnew(STRNOFOUND);
+    }
+    
+end:
+    if (root) cJSON_Delete(root);
+    freeReplyObject(reply);
+    return ret;
+}
+
+/* Parse HSCAN query file trace list
+ * Returns 0 on success, -1 otherwise */
+static int kx_hscan_traces(redisReply *reply, sds *out) {
+    int ret = -1;
+    unsigned long long cursor = 0;
+    redisReply *keys;
+    cJSON *root = NULL;
+    cJSON *traces = NULL;
+
+    cursor = strtoull(reply->element[0]->str, NULL, 10);
+    keys = reply->element[1];
+    if (keys->type != REDIS_REPLY_ARRAY) {
+        log_error("Invalid keys array in HSCAN reply");
+        goto end;
+    }
+
+    root = cJSON_CreateObject();
+    if (root == NULL) {
+        log_error("HSCAN get trace reply Failed to create cJSON object");
+        goto end;
+    }
+
+    cJSON_AddNumberToObject(root, "page", cursor);
+
+    traces = cJSON_CreateArray();
+    if (traces == NULL) {
+        log_error("Failed to create traces array");
+        goto end;
+    }
+    cJSON_AddItemToObject(root, "traces", traces);
+
+    if (reply->type == REDIS_REPLY_ARRAY) {
+        for (size_t i = 0; i < keys->elements; i += 2) {
+            redisReply *key = keys->element[i];
+            redisReply *value = keys->element[i + 1];
+            if (key->type == REDIS_REPLY_STRING && value->type == REDIS_REPLY_STRING) {
+                cJSON_AddItemToArray(traces, cJSON_Parse(value->str));
                 ret = 0;
             }
         }
@@ -451,6 +514,66 @@ int redis_get_fileall(void *data, sds *outdata) {
                                 ac->cmdline, 
                                 fs->machine,
                                 fs->page,
+                                PAGENUM);
+            if (ac->syncexec(reply, outdata) == 0) {
+                redisFree(ctx);
+                return 0;
+            } 
+        }
+        redisFree(ctx);
+    }
+    return -1;
+}
+
+int redis_set_trace(void *data, sds *outdata) {
+    struct action   *ac = NULL;
+    redisReply      *reply = NULL;
+    redisContext    *ctx;
+    Ktrace          *ft;
+
+    ft = (Ktrace*)data;
+    if (ft == NULL) {
+        return -1;
+    }
+
+    ctx = create_redis_ctx();
+    if (ctx) {
+        ac = kx_search_action(REDIS_SET_TRACE);
+        if (ac) {
+            reply = kx_sync_send_cmd(ctx,
+                                ac->cmdline, 
+                                ft->uuid,
+                                ft->tracefield,
+                                ft->data);
+            if (ac->syncexec(reply, outdata) == 0) {
+                redisFree(ctx);
+                return 0;
+            } 
+        }
+        redisFree(ctx);
+    }
+    return -1;
+}
+
+int redis_get_trace(void *data, sds *outdata) {
+    struct action   *ac = NULL;
+    redisReply      *reply = NULL;
+    redisContext    *ctx;
+    Kgettrace       *fg;
+
+    fg = (Kgettrace*)data;
+    if (fg == NULL) {
+        return -1;
+    }
+
+    ctx = create_redis_ctx();
+    if (ctx) {
+        ac = kx_search_action(REDIS_GET_TRACE);
+        if (ac) {
+            reply = kx_sync_send_cmd(ctx,
+                                ac->cmdline, 
+                                fg->uuid,
+                                fg->page,
                                 PAGENUM);
             if (ac->syncexec(reply, outdata) == 0) {
                 redisFree(ctx);
