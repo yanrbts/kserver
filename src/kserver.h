@@ -51,6 +51,8 @@
 #include "util.h"
 #include "log.h"
 
+#define CONFIG_MAX_LINE    1024
+
 struct Server {
     struct mg_init_data init;
     struct mg_callbacks callbacks;
@@ -59,9 +61,12 @@ struct Server {
     struct mg_error_data error;
     uint64_t clients;                   /* Current number of connections */
     char *system_info;                  /* information on the system. Useful for support requests.*/
+    /* configure */
     char *redisip;                      /* redis server ip address */
     uint32_t redisport;                 /* redis server port */
     char *configfile;                   /* Absolute config file path, or NULL */
+    uint32_t pagenum;                   /* Redis paging query is the maximum number 
+                                         * of query data items per page.*/
 };
 
 typedef sds (*json_parse_handler)(char *buf, size_t len);
@@ -76,6 +81,8 @@ struct ApiEntry {
  * Extern declarations
  *----------------------------------------------------------------------------*/
 long long ustime(void);
+/* Configuration */
+void loadServerConfig(char *filename);
 
 extern struct Server server;
 

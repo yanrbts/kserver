@@ -54,3 +54,12 @@ dkms.conf
 
 # object file
 obj/
+*.crt
+*.ext
+*.key
+*.pem
+*.pfx
+*.pin
+*.csr
+*.orig
+*.srl

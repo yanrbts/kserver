@@ -37,6 +37,8 @@
 
 #include "kserver.h"
 
+#define KSERVER_VERSION "1.0.0"
+#define REDIS_PAGENUM   20
 #define MAXLEN          1024
 #define HTTP_OK         200
 #define HTTP_NOFOUND    404
@@ -338,7 +340,11 @@ static void initserver() {
 
     const char *options[] = {
         "document_root", HTTP_ROOT,
-        "listening_ports", HTTP_PORT,
+        "listening_ports", "80r,443s",
+        "request_timeout_ms", "10000",
+        "ssl_certificate", "/home/yrb/src/kserver/cert/server.pem",
+		"ssl_protocol_version", "3",
+		"ssl_cipher_list", "DES-CBC3-SHA:AES128-SHA:AES128-GCM-SHA256",
         NULL
     };
 
@@ -366,8 +372,12 @@ static void initserver() {
     server.init.user_data = NULL;
     server.init.configuration_options = options;
     server.ctx = NULL;
-    server.redisip = "127.0.0.1";
-    server.redisport = 6379;
+    if (server.redisip == NULL)
+        server.redisip = zstrdup("127.0.0.1");
+    if (server.redisport == 0)
+        server.redisport = 6379;
+    if (server.pagenum == 0)
+        server.pagenum = REDIS_PAGENUM;
 
     return;
 err:
@@ -395,6 +405,10 @@ err:
 static void stopserver() {
     if (server.ctx) 
         mg_stop(server.ctx);
+    if (server.configfile)
+        sdsfree(server.configfile);
+    if (server.redisip)
+        zfree(server.redisip);
     free(server.system_info);
     mg_exit_library();
 }
@@ -431,10 +445,23 @@ int main(int argc, char *argv[]) {
     gettimeofday(&tv,NULL);
 
     printf(ascii_logo, atoi(HTTP_PORT), (long)getpid());
+    /* The initialization here is mainly to determine later whether 
+     * to use the value set in the configuration file or use the 
+     * default value.*/
+    server.redisip = NULL;
+    server.redisport = 0;
+    server.pagenum = 0;
 
     if (argc >= 2) {
         configfile = argv[1];
         server.configfile = getAbsolutePath(configfile);
+        loadServerConfig(configfile);
+    }
+
+    if (argc == 1) {
+        log_warn("no config file specified, using the default config. In order to specify a config file use %s /path/to/%s.conf", argv[0], argv[0]);
+    } else {
+        log_info("Configuration loaded");
     }
 
     initserver();

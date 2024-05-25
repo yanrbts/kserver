@@ -218,8 +218,8 @@ err:
     if (f.data) sdsfree(f.data);
     if (f.machine) sdsfree(f.machine);
     if (f.uuid) sdsfree(f.uuid);
-
-    outdata = sdsnew(STRFAIL);
+    if (outdata == NULL)
+        outdata = sdsnew(STRFAIL);
     return outdata;
 }
 
@@ -253,7 +253,8 @@ sds kx_file_get(char *buf, size_t len) {
     return outdata;
 err:
     sdsfree(sm);
-    outdata = sdsnew(STRFAIL);
+    if (outdata == NULL)
+        outdata = sdsnew(STRFAIL);
     return outdata;
 }
 
@@ -301,7 +302,8 @@ sds kx_file_getall(char *buf, size_t len) {
 err:
     if (root) cJSON_Delete(root);
     if (fs.machine) sdsfree(fs.machine);
-    outdata = sdsnew(STRFAIL);
+    if (outdata == NULL)
+        outdata = sdsnew(STRFAIL);
     return outdata;
 }
 
@@ -349,7 +351,8 @@ err:
     if (root) cJSON_Delete(root);
     if (ft.uuid) sdsfree(ft.uuid);
     if (ft.tracefield) sdsfree(ft.tracefield);
-    outdata = sdsnew(STRFAIL);
+    if (outdata == NULL)
+        outdata = sdsnew(STRFAIL);
     return outdata;
 }
 
@@ -397,6 +400,9 @@ sds kx_trace_get(char *buf, size_t len) {
 err:
     if (root) cJSON_Delete(root);
     if (fg.uuid) sdsfree(fg.uuid);
-    outdata = sdsnew(STRFAIL);
+    if (outdata == NULL) {
+        outdata = sdsnew(STRFAIL);
+    }
+    
     return outdata;
 }

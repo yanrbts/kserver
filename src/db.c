@@ -514,7 +514,7 @@ int redis_get_fileall(void *data, sds *outdata) {
                                 ac->cmdline, 
                                 fs->machine,
                                 fs->page,
-                                PAGENUM);
+                                server.pagenum);
             if (ac->syncexec(reply, outdata) == 0) {
                 redisFree(ctx);
                 return 0;
@@ -574,7 +574,7 @@ int redis_get_trace(void *data, sds *outdata) {
                                 ac->cmdline, 
                                 fg->uuid,
                                 fg->page,
-                                PAGENUM);
+                                server.pagenum);
             if (ac->syncexec(reply, outdata) == 0) {
                 redisFree(ctx);
                 return 0;
