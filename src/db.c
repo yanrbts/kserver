@@ -575,6 +575,11 @@ int redis_get_trace(void *data, sds *outdata) {
                                 fg->uuid,
                                 fg->page,
                                 server.pagenum);
+            if (reply == NULL) {
+                redisFree(ctx);
+                return -1;
+            }
+            
             if (ac->syncexec(reply, outdata) == 0) {
                 redisFree(ctx);
                 return 0;
