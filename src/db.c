@@ -368,6 +368,11 @@ int redis_user_register(void *data, sds *outdata) {
                                 u->machine,
                                 u->machine,
                                 u->username);
+            if (reply == NULL) {
+                redisFree(ctx);
+                return -1;
+            }
+            
             if (ac->syncexec(reply, outdata) == 0) {
                 redisFree(ctx);
                 return 0;
@@ -396,6 +401,11 @@ int redis_get_user(void *data, sds *outdata) {
             reply = kx_sync_send_cmd(ctx,
                                 ac->cmdline, 
                                 machine);
+            if (reply == NULL) {
+                redisFree(ctx);
+                return -1;
+            }
+
             if (ac->syncexec(reply, outdata) == 0) {
                 redisFree(ctx);
                 return 0;
@@ -426,6 +436,11 @@ int redis_upload_file(void *data, sds *outdata) {
                                 f->uuid,
                                 f->uuid,
                                 f->data);
+            if (reply == NULL) {
+                redisFree(ctx);
+                return -1;
+            }
+
             if (ac->syncexec(reply, outdata) == 0) {
                 redisFree(ctx);
                 return 0;
@@ -456,6 +471,11 @@ int redis_upload_machine_file(void *data, sds *outdata) {
                                 f->machine,
                                 f->uuid,
                                 f->data);
+            if (reply == NULL) {
+                redisFree(ctx);
+                return -1;
+            }
+
             if (ac->syncexec(reply, outdata) == 0) {
                 redisFree(ctx);
                 return 0;
@@ -485,6 +505,11 @@ int redis_get_file(void *data, sds *outdata) {
                                 ac->cmdline, 
                                 uuid,
                                 uuid);
+            if (reply == NULL) {
+                redisFree(ctx);
+                return -1;
+            }
+
             if (ac->syncexec(reply, outdata) == 0) {
                 redisFree(ctx);
                 return 0;
@@ -515,6 +540,11 @@ int redis_get_fileall(void *data, sds *outdata) {
                                 fs->machine,
                                 fs->page,
                                 server.pagenum);
+            if (reply == NULL) {
+                redisFree(ctx);
+                return -1;
+            }
+
             if (ac->syncexec(reply, outdata) == 0) {
                 redisFree(ctx);
                 return 0;
@@ -545,6 +575,11 @@ int redis_set_trace(void *data, sds *outdata) {
                                 ft->uuid,
                                 ft->tracefield,
                                 ft->data);
+            if (reply == NULL) {
+                redisFree(ctx);
+                return -1;
+            }
+
             if (ac->syncexec(reply, outdata) == 0) {
                 redisFree(ctx);
                 return 0;

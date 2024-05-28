@@ -8,7 +8,7 @@ def random_string(length):
     return ''.join(random.choice(letters_and_digits) for i in range(length))
 
 def setfile():
-    url = 'http://127.0.0.1:8099/fileset'
+    url = 'https://127.0.0.1/fileset'
 
     data = {
         "filename":"file7",
@@ -19,7 +19,7 @@ def setfile():
 
     json_data = json.dumps(data)
 
-    response = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'})
+    response = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'}, verify=False)
 
     if response.status_code == 200:
         print('Response:', response.json())
@@ -28,7 +28,7 @@ def setfile():
         print('Response:', response.text)
 
 def settrace():
-    url = 'http://127.0.0.1:8099/filesettrace'
+    url = 'https://127.0.0.1/filesettrace'
 
     data = {
         "machine":"f526255265340d994510f8d1652e1eb3",
@@ -40,7 +40,7 @@ def settrace():
 
     json_data = json.dumps(data)
 
-    response = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'})
+    response = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'}, verify=False)
 
     if response.status_code == 200:
         print('Response:', response.json())
@@ -49,7 +49,7 @@ def settrace():
         print('Response:', response.text)
 
 def gettracespage(page):
-    url = 'http://127.0.0.1:8099/filegettrace'
+    url = 'https://127.0.0.1/filegettrace'
 
     data = {
         "uuid":"fileuuid7",
@@ -58,7 +58,7 @@ def gettracespage(page):
 
     json_data = json.dumps(data)
 
-    response = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'})
+    response = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'}, verify=False)
 
     if response.status_code == 200:
         return response.json()

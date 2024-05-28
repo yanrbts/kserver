@@ -45,10 +45,12 @@
 #define HTTP_NOFOUND    404
 #define HTTP_ROOT       "./api"
 #define HTTP_PORT       "8099"
+#define HTTP_REQUEST_MS "10000"
+#define HTTPS_PORT      "80r,443s"
 
 char *ascii_logo ="\n" 
-"    __                                      | Version: 1.0.0\n"                       
-"   / /__________  ______   _____  _____     | Port: %d \n"
+"    __                                      | Version: %s\n"                       
+"   / /__________  ______   _____  _____     | Port: %s \n"
 "  / //_/ ___/ _ \\/ ___/ | / / _ \\/ ___/     | PID: %ld\n"
 " / ,< (__  )  __/ /   | |/ /  __/ /         | Author: Yanruibing\n"   
 "/_/|_/____/\\___/_/    |___/\\___/_/          | Web: http://www.kxyk.com \n\n";
@@ -302,7 +304,7 @@ init_ssl(void *ssl_ctx, void *user_data)
 	                            sizeof(SSL_KEY_ASN1));
 
 	if (SSL_CTX_check_private_key(ctx) == 0) {
-		printf("SSL data inconsistency detected\n");
+		log_error("SSL data inconsistency detected\n");
 		return -1;
 	}
 
@@ -577,25 +579,29 @@ void setupSignalHandlers(void) {
 static void initserver() {
     int ret;
 
-    // const char *options[] = {
-    //     "document_root", HTTP_ROOT,
-    //     "listening_ports", "80r,443s",
-    //     "request_timeout_ms", "10000",
-    //     // "authentication_domain", "localhost",
-	//     "enable_auth_domain_check", "no",
-	// 	"ssl_protocol_version", "4",
-	// 	"ssl_cipher_list", "ECDH+AESGCM+AES256:!aNULL:!MD5:!DSS",
-    //     "enable_auth_domain_check", "no",
-    //     "error_log_file", "error.log",
-    //     NULL
-    // };
+    if (server.httpport == NULL)
+        server.httpport = zstrdup(HTTPS_PORT);
+    if (server.request_timeout == NULL)
+        server.request_timeout = zstrdup(HTTP_REQUEST_MS);
 
     const char *options[] = {
         "document_root", HTTP_ROOT,
-        "listening_ports", HTTP_PORT,
-        "request_timeout_ms", "10000",
+        "listening_ports", server.httpport,
+        "request_timeout_ms", server.request_timeout,
+        // "authentication_domain", "localhost",
+		"ssl_protocol_version", "4",
+		"ssl_cipher_list", "ECDH+AESGCM+AES256:!aNULL:!MD5:!DSS",
+        "enable_auth_domain_check", "no",
+        "error_log_file", "error.log",
         NULL
     };
+
+    // const char *options[] = {
+    //     "document_root", HTTP_ROOT,
+    //     "listening_ports", HTTP_PORT,
+    //     "request_timeout_ms", "10000",
+    //     NULL
+    // };
     
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
@@ -682,6 +688,10 @@ static void stopserver() {
         sdsfree(server.configfile);
     if (server.redisip)
         zfree(server.redisip);
+    if (server.httpport)
+        zfree(server.httpport);
+    if (server.request_timeout)
+        zfree(server.request_timeout);
     free(server.system_info);
     mg_exit_library();
 }
@@ -717,19 +727,23 @@ int main(int argc, char *argv[]) {
     srand(time(NULL)^getpid());
     gettimeofday(&tv,NULL);
 
-    printf(ascii_logo, atoi(HTTP_PORT), (long)getpid());
+    // printf(ascii_logo, atoi(HTTP_PORT), (long)getpid());
     /* The initialization here is mainly to determine later whether 
      * to use the value set in the configuration file or use the 
      * default value.*/
     server.redisip = NULL;
     server.redisport = 0;
     server.pagenum = 0;
+    server.httpport = NULL;
+    server.request_timeout = NULL;
 
     if (argc >= 2) {
         configfile = argv[1];
         server.configfile = getAbsolutePath(configfile);
         loadServerConfig(configfile);
     }
+
+    printf(ascii_logo, KSERVER_VERSION, server.httpport ? server.httpport : HTTPS_PORT, (long)getpid());
 
     if (argc == 1) {
         log_warn("no config file specified, using the default config. In order to specify a config file use %s /path/to/%s.conf", argv[0], argv[0]);

@@ -67,6 +67,8 @@ struct Server {
     char *configfile;                   /* Absolute config file path, or NULL */
     uint32_t pagenum;                   /* Redis paging query is the maximum number 
                                          * of query data items per page.*/
+    char *httpport;                     /* web service configuration port */
+    char *request_timeout;              /* Request timeout in milliseconds */
 };
 
 typedef sds (*json_parse_handler)(char *buf, size_t len);

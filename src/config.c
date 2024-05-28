@@ -70,6 +70,10 @@ static void loadServerConfigFromString(char *config) {
             }
         } else if (!strcasecmp(argv[0], "redis-page") && argc == 2) {
             server.pagenum = atoi(argv[1]);
+        } else if (!strcasecmp(argv[0], "port") && argc == 2) {
+            server.httpport = argv[1][0] ? zstrdup(argv[1]) : NULL;
+        } else if (!strcasecmp(argv[0], "request_timeout_ms") && argc == 2) {
+            server.request_timeout = argv[1][0] ? zstrdup(argv[1]) : NULL;
         } else {
             err = "Bad directive or wrong number of arguments"; 
             goto loaderr;
