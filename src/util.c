@@ -36,6 +36,7 @@
 #include <float.h>
 #include <stdint.h>
 #include <errno.h>
+#include "sds.h"
 #include "util.h"
 
 /* Given the filename, return the absolute path as an SDS string, or NULL

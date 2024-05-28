@@ -28,9 +28,6 @@
 #ifndef __UTIL__
 #define __UTIL__
 
-#include <stdint.h>
-#include "sds.h"
-
-sds getAbsolutePath(char *filename);
+char *getAbsolutePath(char *filename);
 
 #endif
