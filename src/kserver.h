@@ -51,7 +51,19 @@
 #include "util.h"
 #include "log.h"
 
-#define CONFIG_MAX_LINE    1024
+#define KSERVER_VERSION         "1.0.0"
+#define REDIS_PAGENUM           20
+#define MAXLEN                  1024
+#define HTTP_OK                 200
+#define HTTP_NOFOUND            404
+#define HTTP_ROOT               "./api"
+#define HTTP_PORT               "8099"
+#define HTTP_REQUEST_MS         "10000"
+#define HTTPS_PORT              "80r,443s"
+#define CONFIG_MAX_LINE         1024
+#define CONFIG_DEFAULT_PID_FILE "/var/run/kserver.pid"
+#define CONFIG_DEFAULT_LOGFILE  ""
+#define CONFIG_REDIS_IP         "127.0.0.1"
 
 struct Server {
     struct mg_init_data init;
@@ -69,6 +81,10 @@ struct Server {
                                          * of query data items per page.*/
     char *httpport;                     /* web service configuration port */
     char *request_timeout;              /* Request timeout in milliseconds */
+    int daemonize;                      /* True if running as a daemon */
+    char *pidfile;                      /* PID file path */
+    char *logfile;                      /*log file */
+    FILE *logfp;                        /*log file handle */
 };
 
 typedef sds (*json_parse_handler)(char *buf, size_t len);

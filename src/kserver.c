@@ -38,15 +38,7 @@
 
 #include "kserver.h"
 
-#define KSERVER_VERSION "1.0.0"
-#define REDIS_PAGENUM   20
-#define MAXLEN          1024
-#define HTTP_OK         200
-#define HTTP_NOFOUND    404
-#define HTTP_ROOT       "./api"
-#define HTTP_PORT       "8099"
-#define HTTP_REQUEST_MS "10000"
-#define HTTPS_PORT      "80r,443s"
+
 
 char *ascii_logo ="\n" 
 "    __                                      | Version: %s\n"                       
@@ -579,11 +571,6 @@ void setupSignalHandlers(void) {
 static void initserver() {
     int ret;
 
-    if (server.httpport == NULL)
-        server.httpport = zstrdup(HTTPS_PORT);
-    if (server.request_timeout == NULL)
-        server.request_timeout = zstrdup(HTTP_REQUEST_MS);
-
     const char *options[] = {
         "document_root", HTTP_ROOT,
         "listening_ports", server.httpport,
@@ -615,7 +602,7 @@ static void initserver() {
 
     if (!mg_check_feature(2)) {
 		log_error("built with SSL support, but civetweb library build without.");
-        exit(1);
+        goto err;
 	}
 
     memset(&server.callbacks, 0, sizeof(struct mg_callbacks));
@@ -635,12 +622,18 @@ static void initserver() {
     server.init.user_data = NULL;
     server.init.configuration_options = options;
     server.ctx = NULL;
-    if (server.redisip == NULL)
-        server.redisip = zstrdup("127.0.0.1");
-    if (server.redisport == 0)
-        server.redisport = 6379;
-    if (server.pagenum == 0)
-        server.pagenum = REDIS_PAGENUM;
+    
+    if (server.logfile[0] != '\0') {
+        server.logfp = fopen(server.logfile, "a+");
+        if (server.logfp) {
+            log_add_fp(server.logfp, LOG_INFO | LOG_TRACE | LOG_ERROR | LOG_FATAL);
+            log_set_quiet(1);
+        } else {
+            /* The log file failed to open, but it was output directly 
+             * to standard output without exiting the program.*/
+            log_error("Failed to open or create the %s log file.", server.logfile);
+        }
+    }
 
     return;
 err:
@@ -692,6 +685,10 @@ static void stopserver() {
         zfree(server.httpport);
     if (server.request_timeout)
         zfree(server.request_timeout);
+    if (server.pidfile)
+        zfree(server.pidfile);
+    if (server.logfile)
+        zfree(server.logfile);
     free(server.system_info);
     mg_exit_library();
 }
@@ -725,6 +722,20 @@ void daemonize(void) {
     }
 }
 
+void createPidFile(void) {
+    /* If pidfile requested, but no pidfile defined, use
+     * default pidfile path */
+    if (!server.pidfile) 
+        server.pidfile = zstrdup(CONFIG_DEFAULT_PID_FILE);
+
+    /* Try to write the pid file in a best-effort way. */
+    FILE *fp = fopen(server.pidfile,"w");
+    if (fp) {
+        fprintf(fp,"%d\n", (int)getpid());
+        fclose(fp);
+    }
+}
+
 int main(int argc, char *argv[]) {
     struct timeval tv;
     char *configfile;
@@ -744,15 +755,17 @@ int main(int argc, char *argv[]) {
     srand(time(NULL)^getpid());
     gettimeofday(&tv,NULL);
 
-    // printf(ascii_logo, atoi(HTTP_PORT), (long)getpid());
     /* The initialization here is mainly to determine later whether 
      * to use the value set in the configuration file or use the 
      * default value.*/
-    server.redisip = NULL;
-    server.redisport = 0;
-    server.pagenum = 0;
-    server.httpport = NULL;
-    server.request_timeout = NULL;
+    server.redisip = zstrdup(CONFIG_REDIS_IP);
+    server.redisport = 6379;
+    server.pagenum = REDIS_PAGENUM;
+    server.httpport = zstrdup(HTTPS_PORT);
+    server.request_timeout = zstrdup(HTTP_REQUEST_MS);
+    server.daemonize = 0;
+    server.pidfile = NULL;
+    server.logfile = zstrdup(CONFIG_DEFAULT_LOGFILE);
 
     if (argc >= 2) {
         configfile = argv[1];
@@ -768,7 +781,14 @@ int main(int argc, char *argv[]) {
         log_info("Configuration loaded");
     }
 
+    if (server.daemonize)
+        daemonize();
+
     initserver();
+
+    if (server.daemonize || server.pidfile)
+        createPidFile();
+
     startserver();
     stopserver();
     return 0;
