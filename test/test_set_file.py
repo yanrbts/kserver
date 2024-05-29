@@ -3,8 +3,8 @@ import json
 import random
 import string
 
-cert_file_path = "/home/yrb/kserver/cert/client.pem"
-ca_path = "/home/yrb/kserver/cert/rootCA.pem"
+cert_file_path = "/home/yrb/src/kserver/cert/client.pem"
+ca_path = "/home/yrb/src/kserver/cert/rootCA.pem"
 # 生成随机机器码
 def generate_random_machine_code(length=32):
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))

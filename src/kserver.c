@@ -51,6 +51,7 @@ struct Server server;
 
 static char error_text[256] = {0};
 
+static void showWebOption(void);
 static void initserver();
 static void startserver();
 static void stopserver();
@@ -575,11 +576,11 @@ static void initserver() {
         "listening_ports", server.httpport,
         "request_timeout_ms", server.request_timeout,
         "authentication_domain", "localhost",
-        "enable_auth_domain_check", "no",
-        "ssl_certificate", "/home/yrb/kserver/cert/server.pem",
-        // "ssl_certificate_chain", "/home/yrb/kserver/cert/rootCA.pem",
+        "enable_auth_domain_check", "yes",
+        "ssl_certificate", "/home/yrb/src/kserver/cert/server.pem",
+        // "ssl_certificate_chain", "/home/yrb/src/kserver/cert/rootCA.pem",
+        "ssl_ca_file", "/home/yrb/src/kserver/cert/rootCA.pem",
 		"ssl_protocol_version", "4",
-		// "ssl_cipher_list", "ECDHE-RSA-AES256-GCM-SHA384:DES-CBC3-SHA:AES128-SHA:AES128-GCM-SHA256:AES-256-CBC",
         "ssl_cipher_list", "TLS_AES_128_GCM_SHA256:AES256-SHA:HIGH:!aNULL:!MD5:!3DES",
         "error_log_file", "error.log",
         NULL,NULL
@@ -655,6 +656,8 @@ static void startserver() {
         goto err;
     }
 
+    showWebOption();
+
     port_cnt = mg_get_server_ports(server.ctx, 32, server.ports);
     for (n = 0; n < port_cnt && n < 32; n++) {
         const char *proto = server.ports[n].is_ssl ? "https" : "http";
@@ -707,7 +710,7 @@ long long ustime(void) {
     return ust;
 }
 
-void daemonize(void) {
+static void daemonize(void) {
     int fd;
 
     if (fork() != 0) exit(0); /* parent exits */
@@ -724,7 +727,7 @@ void daemonize(void) {
     }
 }
 
-void createPidFile(void) {
+static void createPidFile(void) {
     /* If pidfile requested, but no pidfile defined, use
      * default pidfile path */
     if (!server.pidfile) 
@@ -736,6 +739,43 @@ void createPidFile(void) {
         fprintf(fp,"%d\n", (int)getpid());
         fclose(fp);
     }
+}
+
+static void showWebOption(void) {
+    int i;
+    const char *value;
+    const struct mg_option *options;
+
+    // options = mg_get_valid_options();
+    // for (i = 0; options[i].name != NULL; i++) {
+    //     value = mg_get_option(server.ctx, options[i].name);
+	// 		fprintf(stderr,
+	// 		        "# %s %s\n",
+	// 		        options[i].name,
+	// 		        value ? value : "<value>");
+    // }
+
+    value = mg_get_option(server.ctx, "listening_ports");
+    fprintf(stderr, "[ %-24s %40s ]\n", "listening_ports", value ? value : "<value>");
+    value = mg_get_option(server.ctx, "document_root");
+    fprintf(stderr, "[ %-24s %40s ]\n", "document_root", value ? value : "<value>");
+    value = mg_get_option(server.ctx, "authentication_domain");
+    fprintf(stderr, "[ %-24s %40s ]\n", "authentication_domain", value ? value : "<value>");
+    value = mg_get_option(server.ctx, "num_threads");
+    fprintf(stderr, "[ %-24s %40s ]\n", "num_threads", value ? value : "<value>");
+    value = mg_get_option(server.ctx, "ssl_protocol_version");
+    fprintf(stderr, "[ %-24s %40s ]\n", "ssl_protocol_version", value ? value : "<value>");
+    value = mg_get_option(server.ctx, "request_timeout_ms");
+    fprintf(stderr, "[ %-24s %40s ]\n", "request_timeout_ms", value ? value : "<value>");
+    value = mg_get_option(server.ctx, "keep_alive_timeout_ms");
+    fprintf(stderr, "[ %-24s %40s ]\n", "keep_alive_timeout_ms", value ? value : "<value>");
+    value = mg_get_option(server.ctx, "max_request_size");
+    fprintf(stderr, "[ %-24s %40s ]\n", "max_request_size", value ? value : "<value>");
+    value = mg_get_option(server.ctx, "ssl_certificate");
+    fprintf(stderr, "[ %-24s %40s ]\n", "ssl_certificate", value ? value : "<value>");
+    value = mg_get_option(server.ctx, "ssl_ca_file");
+    fprintf(stderr, "[ %-24s %40s ]\n", "ssl_ca_file", value ? value : "<value>");
+    
 }
 
 int main(int argc, char *argv[]) {
@@ -778,7 +818,7 @@ int main(int argc, char *argv[]) {
     printf(ascii_logo, KSERVER_VERSION, server.httpport ? server.httpport : HTTPS_PORT, (long)getpid());
 
     if (argc == 1) {
-        log_warn("no config file specified, using the default config. In order to specify a config file use %s /path/to/%s.conf", argv[0], argv[0]);
+        log_warn("no config file specified, using the default config. In order to specify a config file use %s /path/to/%s.conf", argv[0], argv[0]+2);
     } else {
         log_info("Configuration loaded");
     }
@@ -790,7 +830,7 @@ int main(int argc, char *argv[]) {
 
     if (server.daemonize || server.pidfile)
         createPidFile();
-
+    
     startserver();
     stopserver();
     return 0;

@@ -52,7 +52,7 @@
 #include "log.h"
 
 #define KSERVER_VERSION         "1.0.0"
-#define REDIS_PAGENUM           20
+#define REDIS_PAGENUM           100
 #define MAXLEN                  1024
 #define HTTP_OK                 200
 #define HTTP_NOFOUND            404

@@ -2,7 +2,6 @@ import requests
 import json
 import random
 import string
-import time
 
 cert_file_path = "/home/yrb/src/kserver/cert/client.pem"
 ca_path = "/home/yrb/src/kserver/cert/rootCA.pem"
@@ -12,7 +11,7 @@ def random_string(length):
     return ''.join(random.choice(letters_and_digits) for i in range(length))
 
 def setfile():
-    url = 'https://localhost/fileset'
+    url = 'http://127.0.0.1:8099/fileset'
 
     data = {
         "filename":"file7",
@@ -24,9 +23,7 @@ def setfile():
     json_data = json.dumps(data)
 
     response = requests.post(url, data=json_data, 
-                            headers={'Content-Type': 'application/json'}, 
-                            cert=cert_file_path,
-                            verify=ca_path)
+                             headers={'Content-Type': 'application/json'})
 
     if response.status_code == 200:
         print('Response:', response.json())
@@ -35,7 +32,7 @@ def setfile():
         print('Response:', response.text)
 
 def settrace():
-    url = 'https://localhost/filesettrace'
+    url = 'http://127.0.0.1:8099/filesettrace'
 
     data = {
         "machine":"f526255265340d994510f8d1652e1eb3",
@@ -48,9 +45,7 @@ def settrace():
     json_data = json.dumps(data)
 
     response = requests.post(url, data=json_data, 
-                             headers={'Content-Type': 'application/json'}, 
-                             cert=cert_file_path,
-                             verify=ca_path)
+                             headers={'Content-Type': 'application/json'})
 
     if response.status_code == 200:
         print('Response:', response.json())
@@ -59,7 +54,7 @@ def settrace():
         print('Response:', response.text)
 
 def gettracespage(page):
-    url = 'https://localhost/filegettrace'
+    url = 'http://127.0.0.1:8099/filegettrace'
 
     data = {
         "uuid":"fileuuid7",
@@ -69,9 +64,7 @@ def gettracespage(page):
     json_data = json.dumps(data)
 
     response = requests.post(url, data=json_data, 
-                             headers={'Content-Type': 'application/json'}, 
-                             cert=cert_file_path,
-                             verify=ca_path)
+                             headers={'Content-Type': 'application/json'})
 
     if response.status_code == 200:
         # print('Response:', response.text)
@@ -91,6 +84,7 @@ def gettraces():
             # print('Response:', response)
             n = len(response['traces'])
             print(f"Number of traces: {n}")
+            gettracespage(page)
         else:
             break
 
