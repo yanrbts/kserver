@@ -10,7 +10,7 @@ echo "Using 'pass' for every password"
 
 echo "Generating a root CA ..."
 
-openssl genrsa -passout pass:pass -out rootCA.key 2048
+openssl genrsa -des3 -passout pass:pass -out rootCA.key 2048
 openssl req -passout pass:pass -new -key rootCA.key -out rootCA.csr -subj $cert_subject
 # For a test certificate, use "AA" as "user assigned" language code: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#AA
 
@@ -23,7 +23,7 @@ cat rootCA.key >> rootCA.pem
 
 echo "Generating client certificate ..."
 
-openssl genrsa -passout pass:pass -out client.key 2048
+openssl genrsa -des3 -passout pass:pass -out client.key 2048
 openssl req -passout pass:pass -new -key client.key -out client.csr -subj $cert_subject
 
 cp client.key client.key.orig
@@ -40,7 +40,7 @@ openssl pkcs12 -passout pass:pass -export -inkey client.key -in client.pem -name
 
 echo "Generating first server certificate ..."
 
-openssl genrsa -passout pass:pass -out server.key 2048
+openssl genrsa -des3 -passout pass:pass -out server.key 2048
 openssl req -passout pass:pass -new -key server.key -out server.csr -subj $cert_subject
 
 cp server.key server.key.orig

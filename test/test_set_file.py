@@ -4,13 +4,13 @@ import random
 import string
 
 cert_file_path = "/home/yrb/kserver/cert/client.pem"
-
+ca_path = "/home/yrb/kserver/cert/rootCA.pem"
 # 生成随机机器码
 def generate_random_machine_code(length=32):
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
 
 def request_setfile(index):
-    url = 'https://127.0.0.1/fileset'
+    url = 'https://localhost/fileset'
 
     data = {
         "filename":f"file{index}",
@@ -27,7 +27,7 @@ def request_setfile(index):
             data=json_data, 
             headers={'Content-Type': 'application/json'},
             cert=cert_file_path,
-            verify=True
+            verify=ca_path
         )
         if response.status_code == 200:
             print('Response:', response.json())
@@ -39,7 +39,7 @@ def request_setfile(index):
 
 
 def request_getfile(index):
-    url = 'https://127.0.0.1/fileget'
+    url = 'https://localhost/fileget'
 
     data = {
         "uuid":f"fileuuid{index}"
@@ -53,7 +53,7 @@ def request_getfile(index):
             data=json_data, 
             headers={'Content-Type': 'application/json'},
             cert=cert_file_path,
-            verify=True
+            verify=ca_path
         )
         if response.status_code == 200:
             print('Response:', response.json())

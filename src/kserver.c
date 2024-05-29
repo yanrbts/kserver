@@ -577,11 +577,11 @@ static void initserver() {
         "authentication_domain", "localhost",
         "enable_auth_domain_check", "no",
         "ssl_certificate", "/home/yrb/kserver/cert/server.pem",
-        "ssl_certificate_chain", "/home/yrb/kserver/cert/rootCA.pem",
+        // "ssl_certificate_chain", "/home/yrb/kserver/cert/rootCA.pem",
 		"ssl_protocol_version", "4",
 		// "ssl_cipher_list", "ECDHE-RSA-AES256-GCM-SHA384:DES-CBC3-SHA:AES128-SHA:AES128-GCM-SHA256:AES-256-CBC",
-        "ssl_cipher_list", "ALL",
-        "error_log_file", "./error.log",
+        "ssl_cipher_list", "TLS_AES_128_GCM_SHA256:AES256-SHA:HIGH:!aNULL:!MD5:!3DES",
+        "error_log_file", "error.log",
         NULL,NULL
     };
 
