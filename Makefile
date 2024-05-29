@@ -1,5 +1,5 @@
 CFLAGS  += -std=c99 -Wall -O2 -D_REENTRANT -DLOG_USE_COLOR -g -I./civetweb/include -I./hiredis
-LIBS    := ./civetweb/libcivetweb.a ./hiredis/libhiredis.a -lm -lssl -lpthread
+LIBS    := ./civetweb/libcivetweb.a ./hiredis/libhiredis.a -lm -lssl -lcrypto -lpthread
 
 TARGET  := $(shell uname -s | tr '[A-Z]' '[a-z]' 2>/dev/null || echo unknown)
 

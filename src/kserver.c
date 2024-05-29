@@ -294,7 +294,6 @@ init_ssl(void *ssl_ctx, void *user_data)
 	                            ctx,
 	                            SSL_KEY_ASN1,
 	                            sizeof(SSL_KEY_ASN1));
-
 	if (SSL_CTX_check_private_key(ctx) == 0) {
 		log_error("SSL data inconsistency detected\n");
 		return -1;
@@ -575,12 +574,15 @@ static void initserver() {
         "document_root", HTTP_ROOT,
         "listening_ports", server.httpport,
         "request_timeout_ms", server.request_timeout,
-        // "authentication_domain", "localhost",
+        "authentication_domain", "localhost",
+        "ssl_certificate", "/home/yrb/kserver/cert/server.pem",
+        "ssl_certificate_chain", "/home/yrb/kserver/cert/rootCA.pem",
 		"ssl_protocol_version", "4",
-		"ssl_cipher_list", "ECDH+AESGCM+AES256:!aNULL:!MD5:!DSS",
-        "enable_auth_domain_check", "no",
-        "error_log_file", "error.log",
-        NULL
+		// "ssl_cipher_list", "ECDHE-RSA-AES256-GCM-SHA384:DES-CBC3-SHA:AES128-SHA:AES128-GCM-SHA256:AES-256-CBC",
+        "ssl_cipher_list", "ALL",
+        "enable_auth_domain_check", "yes",
+        "error_log_file", "./error.log",
+        NULL,NULL
     };
 
     // const char *options[] = {
@@ -608,7 +610,7 @@ static void initserver() {
     memset(&server.callbacks, 0, sizeof(struct mg_callbacks));
     server.callbacks.log_message = log_message_cb;
     server.callbacks.connection_close = connection_close_cb;
-    server.callbacks.init_ssl = init_ssl;
+    // server.callbacks.init_ssl = init_ssl;
 
     memset(&server.error, 0, sizeof(struct mg_error_data));
     memset(&server.init, 0, sizeof(struct mg_init_data));

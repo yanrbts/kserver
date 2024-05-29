@@ -3,31 +3,68 @@ import json
 import random
 import string
 
+cert_file_path = "/home/yrb/kserver/cert/client.pem"
+
 # 生成随机机器码
 def generate_random_machine_code(length=32):
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
 
-# 目标 URL
-url = 'http://127.0.0.1:8099/fileset'  # 请替换为实际的服务器 URL
+def request_setfile(index):
+    url = 'https://127.0.0.1/fileset'
 
-# 要发送的 JSON 数据
-data = {
-    "filename":"file5",
-    "uuid":"file1uuid5",
-    "filepath":"/path/to/file5.txt",
-    "machine":"f526255265340d994510f8d1652e1eb3"
-}
+    data = {
+        "filename":f"file{index}",
+        "uuid":f"fileuuid{index}",
+        "filepath":f"/path/to/file{index}.txt",
+        "machine":"f526255265340d994510f8d1652e1eb3"
+    }
 
-# 将字典转换为 JSON 字符串
-json_data = json.dumps(data)
+    json_data = json.dumps(data)
 
-# 发送 POST 请求
-response = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'})
+    try:
+        response = requests.post(
+            url, 
+            data=json_data, 
+            headers={'Content-Type': 'application/json'},
+            cert=cert_file_path,
+            verify=True
+        )
+        if response.status_code == 200:
+            print('Response:', response.json())
+        else:
+            print(f'Request failed with status code {response.status_code}')
+            print('Response:', response.text)
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
 
-# 检查响应状态码
-if response.status_code == 200:
-    print('Request was successful')
-    print('Response:', response.json())
-else:
-    print(f'Request failed with status code {response.status_code}')
-    print('Response:', response.text)
+
+def request_getfile(index):
+    url = 'https://127.0.0.1/fileget'
+
+    data = {
+        "uuid":f"fileuuid{index}"
+    }
+
+    json_data = json.dumps(data)
+
+    try:
+        response = requests.post(
+            url, 
+            data=json_data, 
+            headers={'Content-Type': 'application/json'},
+            cert=cert_file_path,
+            verify=True
+        )
+        if response.status_code == 200:
+            print('Response:', response.json())
+        else:
+            print(f'Request failed with status code {response.status_code}')
+            print('Response:', response.text)
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    for i in range(30):
+        request_setfile(i)
+        request_getfile(i)
+
