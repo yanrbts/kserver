@@ -575,12 +575,12 @@ static void initserver() {
         "listening_ports", server.httpport,
         "request_timeout_ms", server.request_timeout,
         "authentication_domain", "localhost",
+        "enable_auth_domain_check", "no",
         "ssl_certificate", "/home/yrb/kserver/cert/server.pem",
         "ssl_certificate_chain", "/home/yrb/kserver/cert/rootCA.pem",
 		"ssl_protocol_version", "4",
 		// "ssl_cipher_list", "ECDHE-RSA-AES256-GCM-SHA384:DES-CBC3-SHA:AES128-SHA:AES128-GCM-SHA256:AES-256-CBC",
         "ssl_cipher_list", "ALL",
-        "enable_auth_domain_check", "yes",
         "error_log_file", "./error.log",
         NULL,NULL
     };
@@ -598,7 +598,7 @@ static void initserver() {
 
     ret = mg_init_library(MG_FEATURES_TLS);
     if (ret != MG_FEATURES_TLS) {
-        log_error("Initializing SSL libraries failed.");
+        log_error("Initializing SSL libraries failed. (%u %s)", server.error.code, server.error.text);
         goto err;
     }
 
