@@ -292,7 +292,7 @@ static redisReply *kx_command(redisContext *c, const char *cmd) {
     reply = redisCommand(c, cmd);
 
     if (reply == NULL) {
-        log_error("redis error: %s (%s)", c->errstr ? c->errstr : "unknown error", cmd);
+        log_error("redis reply=null error: %s (%s)", c->errstr ? c->errstr : "unknown error", cmd);
     }
     return reply;
 }

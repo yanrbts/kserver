@@ -3,12 +3,15 @@ import json
 import random
 import string
 
+cert_file_path = "/home/yrb/kserver/cert/client.pem"
+ca_path = "/home/yrb/kserver/cert/rootCA.pem"
+
 def random_string(length):
     letters_and_digits = string.ascii_lowercase + string.digits
     return ''.join(random.choice(letters_and_digits) for i in range(length))
 
 def setfile():
-    url = 'https://127.0.0.1/fileset'
+    url = 'https://localhost/fileset'
 
     data = {
         "filename":"file7",
@@ -19,7 +22,10 @@ def setfile():
 
     json_data = json.dumps(data)
 
-    response = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'}, verify=False)
+    response = requests.post(url, data=json_data, 
+                            headers={'Content-Type': 'application/json'}, 
+                            cert=cert_file_path,
+                            verify=ca_path)
 
     if response.status_code == 200:
         print('Response:', response.json())
@@ -28,7 +34,7 @@ def setfile():
         print('Response:', response.text)
 
 def settrace():
-    url = 'https://127.0.0.1/filesettrace'
+    url = 'https://localhost/filesettrace'
 
     data = {
         "machine":"f526255265340d994510f8d1652e1eb3",
@@ -40,7 +46,10 @@ def settrace():
 
     json_data = json.dumps(data)
 
-    response = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'}, verify=False)
+    response = requests.post(url, data=json_data, 
+                             headers={'Content-Type': 'application/json'}, 
+                             cert=cert_file_path,
+                             verify=ca_path)
 
     if response.status_code == 200:
         print('Response:', response.json())
@@ -49,7 +58,7 @@ def settrace():
         print('Response:', response.text)
 
 def gettracespage(page):
-    url = 'https://127.0.0.1/filegettrace'
+    url = 'https://localhost/filegettrace'
 
     data = {
         "uuid":"fileuuid7",
@@ -58,9 +67,13 @@ def gettracespage(page):
 
     json_data = json.dumps(data)
 
-    response = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'}, verify=False)
+    response = requests.post(url, data=json_data, 
+                             headers={'Content-Type': 'application/json'}, 
+                             cert=cert_file_path,
+                             verify=ca_path)
 
     if response.status_code == 200:
+        print('Response:', response.text)
         return response.json()
     else:
         print(f'Request failed with status code {response.status_code}')
