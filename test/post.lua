@@ -1,7 +1,7 @@
 -- save this as post.lua
 wrk.method = "POST"
 wrk.headers["Content-Type"] = "application/json"
-wrk.body = '{"key1":"value1", "key2":"value2"}'
+wrk.body = '{"uuid":"fileuuid7", "page":"0"}'
 
 -- If you need to set a specific URL path dynamically, you can modify this script to do so.
 -- For example, to send requests to different endpoints:

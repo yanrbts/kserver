@@ -106,6 +106,24 @@ static void loadServerConfigFromString(char *config) {
                 }
                 fclose(logfp);
             }
+        } else if (!strcasecmp(argv[0], "auth_domain") && argc == 2) {
+            zfree(server.auth_domain);
+            server.auth_domain = zstrdup(argv[1]);
+        } else if (!strcasecmp(argv[0], "auth_domain_check") && argc == 2) {
+            zfree(server.auth_domain_check);
+            server.auth_domain_check = zstrdup(argv[1]);
+        } else if (!strcasecmp(argv[0], "ssl_certificate") && argc == 2) {
+            zfree(server.ssl_certificate);
+            server.ssl_certificate = zstrdup(argv[1]);
+        } else if (!strcasecmp(argv[0], "ssl_ca_file") && argc == 2) {
+            zfree(server.ssl_ca_file);
+            server.ssl_ca_file = zstrdup(argv[1]);
+        } else if (!strcasecmp(argv[0], "ssl_protocol_version") && argc == 2) {
+            zfree(server.ssl_protocol_version);
+            server.ssl_protocol_version = zstrdup(argv[1]);
+        } else if (!strcasecmp(argv[0], "ssl_cipher_list") && argc == 2) {
+            zfree(server.ssl_cipher_list);
+            server.ssl_cipher_list = zstrdup(argv[1]);
         } else {
             err = "Bad directive or wrong number of arguments"; 
             goto loaderr;

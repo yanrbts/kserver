@@ -4,8 +4,8 @@ import random
 import string
 import time
 
-cert_file_path = "/home/yrb/src/kserver/cert/client.pem"
-ca_path = "/home/yrb/src/kserver/cert/rootCA.pem"
+cert_file_path = "/home/yrb/kserver/cert/client.pem"
+ca_path = "/home/yrb/kserver/cert/rootCA.pem"
 
 def random_string(length):
     letters_and_digits = string.ascii_lowercase + string.digits

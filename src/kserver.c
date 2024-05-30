@@ -568,6 +568,24 @@ void setupSignalHandlers(void) {
     return;
 }
 
+static void initServerConfig(void) {
+    server.redisip = zstrdup(CONFIG_REDIS_IP);
+    server.redisport = CONFIG_REDIS_PORT;
+    server.pagenum = REDIS_PAGENUM;
+    server.httpport = zstrdup(HTTPS_PORT);
+    server.request_timeout = zstrdup(HTTP_REQUEST_MS);
+    server.daemonize = 0;
+    server.pidfile = NULL;
+    server.logfile = zstrdup(CONFIG_DEFAULT_LOGFILE);
+    server.auth_domain = zstrdup(CONFIG_CIVET_AUTH_DOMAIN);
+    server.auth_domain_check = zstrdup(CONFIG_CIVET_DOMAIN_CHECK);
+    server.ssl_certificate = zstrdup(CONFIG_CIVET_CERT);
+    server.ssl_ca_file = zstrdup(CONFIG_CIVET_CA);
+    server.ssl_protocol_version = zstrdup(CONFIG_CIVET_SSLPROTOVOL);
+    server.ssl_cipher_list = zstrdup(CONFIG_CIVET_SSLCIPHER);
+    server.logfp = NULL;
+}
+
 static void initserver() {
     int ret;
 
@@ -575,13 +593,13 @@ static void initserver() {
         "document_root", HTTP_ROOT,
         "listening_ports", server.httpport,
         "request_timeout_ms", server.request_timeout,
-        "authentication_domain", "localhost",
-        "enable_auth_domain_check", "yes",
-        "ssl_certificate", "/home/yrb/src/kserver/cert/server.pem",
+        "authentication_domain", server.auth_domain,
+        "enable_auth_domain_check", server.auth_domain_check,
+        "ssl_certificate", server.ssl_certificate,
         // "ssl_certificate_chain", "/home/yrb/src/kserver/cert/rootCA.pem",
-        "ssl_ca_file", "/home/yrb/src/kserver/cert/rootCA.pem",
-		"ssl_protocol_version", "4",
-        "ssl_cipher_list", "TLS_AES_128_GCM_SHA256:AES256-SHA:HIGH:!aNULL:!MD5:!3DES",
+        "ssl_ca_file", server.ssl_ca_file,
+		"ssl_protocol_version", server.ssl_protocol_version,
+        "ssl_cipher_list", server.ssl_cipher_list,
         "error_log_file", "error.log",
         NULL,NULL
     };
@@ -629,7 +647,7 @@ static void initserver() {
     if (server.logfile[0] != '\0') {
         server.logfp = fopen(server.logfile, "a+");
         if (server.logfp) {
-            log_add_fp(server.logfp, LOG_INFO | LOG_TRACE | LOG_ERROR | LOG_FATAL);
+            log_add_fp(server.logfp, LOG_TRACE);
             log_set_quiet(1);
         } else {
             /* The log file failed to open, but it was output directly 
@@ -694,6 +712,24 @@ static void stopserver() {
         zfree(server.pidfile);
     if (server.logfile)
         zfree(server.logfile);
+
+    if (server.auth_domain)
+        zfree(server.auth_domain);
+    if (server.auth_domain_check)
+        zfree(server.auth_domain_check);
+    if (server.ssl_certificate)
+        zfree(server.ssl_certificate);
+    if (server.ssl_ca_file)
+        zfree(server.ssl_ca_file);
+    if (server.ssl_protocol_version)
+        zfree(server.ssl_protocol_version);
+    if (server.ssl_cipher_list)
+        zfree(server.ssl_cipher_list);
+    if (server.logfp)
+        fclose(server.logfp);
+
+    if (server.redisctx)
+        redisFree(server.redisctx);
     free(server.system_info);
     mg_exit_library();
 }
@@ -710,6 +746,7 @@ long long ustime(void) {
     return ust;
 }
 
+/********************************************************************************/
 static void daemonize(void) {
     int fd;
 
@@ -742,9 +779,9 @@ static void createPidFile(void) {
 }
 
 static void showWebOption(void) {
-    int i;
+    // int i;
     const char *value;
-    const struct mg_option *options;
+    // const struct mg_option *options;
 
     // options = mg_get_valid_options();
     // for (i = 0; options[i].name != NULL; i++) {
@@ -800,14 +837,7 @@ int main(int argc, char *argv[]) {
     /* The initialization here is mainly to determine later whether 
      * to use the value set in the configuration file or use the 
      * default value.*/
-    server.redisip = zstrdup(CONFIG_REDIS_IP);
-    server.redisport = 6379;
-    server.pagenum = REDIS_PAGENUM;
-    server.httpport = zstrdup(HTTPS_PORT);
-    server.request_timeout = zstrdup(HTTP_REQUEST_MS);
-    server.daemonize = 0;
-    server.pidfile = NULL;
-    server.logfile = zstrdup(CONFIG_DEFAULT_LOGFILE);
+    initServerConfig();
 
     if (argc >= 2) {
         configfile = argv[1];

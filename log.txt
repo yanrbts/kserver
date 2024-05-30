@@ -1,0 +1,412 @@
+2024-05-30 11:47:51 ERROR src/db.c:295: redis reply=null error:  (HSCAN filekey:fileuuid7 0 MATCH trace:* COUNT 20)
+2024-05-30 11:50:25 INFO  src/kserver.c:684: http protocol(http), IPv4, port(80)
+2024-05-30 11:50:26 INFO  src/kserver.c:684: http protocol(https), IPv4, port(443)
+2024-05-30 11:50:29 INFO  src/db.c:325: HSET filekey:fileuuid7 fileuuid7 {
+	"filename":	"file7",
+	"uuid":	"fileuuid7",
+	"filepath":	"/path/to/file7.txt",
+	"machine":	"f526255265340d994510f8d1652e1eb3"
+}
+2024-05-30 11:50:29 INFO  src/kserver.c:407: (/fileset) connect close
+2024-05-30 11:50:30 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041030026685 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"tu6p5iadpnq",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:30 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:30 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041030176169 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"thkt0qg87mf",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:30 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:30 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041030318753 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"p36j1llk72m",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:30 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:30 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041030493090 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"ivrh6oeveck",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:30 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:30 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041030619149 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"hcaxn903p34",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:30 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:30 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041030754564 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"kjqlmsj5228",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:30 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:30 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041030892822 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"odt4a6s503n",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:30 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:31 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041031032463 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"24qgk9e9kra",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:31 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:31 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041031186077 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"etx1iaz4mif",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:31 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:31 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041031348355 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"f8fiytz8sce",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:31 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:31 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041031508689 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"t835xg6x70j",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:31 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:31 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041031669598 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"i7f97rhtwwe",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:31 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:31 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041031818737 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"j84fqhtv9tk",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:31 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:31 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041031983194 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"u9nn2amo4oo",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:31 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:32 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041032151756 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"0yxciz8jtc9",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:32 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:32 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041032305344 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"gtnhrtpdfze",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:32 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:32 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041032483603 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"35ghgbabyfe",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:32 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:32 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041032664431 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"c4l85btpym7",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:32 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:32 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041032828884 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"q7ey50y7loi",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:32 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:32 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041032981975 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"i8reku2uwgx",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:32 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:33 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041033137954 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"i8iz5lm5qm1",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:33 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:33 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041033303348 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"oe4zrsrniu5",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:33 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:33 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041033479149 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"tndytwgvw2x",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:33 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:33 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041033650511 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"71husrn8edd",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:33 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:33 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041033841904 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"uu8q3gnzexi",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:33 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:34 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041034037894 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"oo4te2bns23",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:34 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:34 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041034249256 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"q9oakjwxell",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:34 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:34 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041034433978 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"doko9us8f40",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:34 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:34 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041034608631 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"nubgsuc4rti",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:34 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:34 INFO  src/db.c:325: HSET filekey:fileuuid7 trace:1717041034796978 {
+	"machine":	"f526255265340d994510f8d1652e1eb3",
+	"uuid":	"fileuuid7",
+	"username":	"7s2u6hzbj3k",
+	"time":	"2024-05-23",
+	"action":	0
+}
+2024-05-30 11:50:34 INFO  src/kserver.c:407: (/filesettrace) connect close
+2024-05-30 11:50:34 INFO  src/db.c:325: HSCAN filekey:fileuuid7 0 MATCH trace:* COUNT 20
+2024-05-30 11:50:35 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:35 INFO  src/db.c:325: HSCAN filekey:fileuuid7 704 MATCH trace:* COUNT 20
+2024-05-30 11:50:35 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:35 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1888 MATCH trace:* COUNT 20
+2024-05-30 11:50:35 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:35 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1936 MATCH trace:* COUNT 20
+2024-05-30 11:50:35 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:35 INFO  src/db.c:325: HSCAN filekey:fileuuid7 816 MATCH trace:* COUNT 20
+2024-05-30 11:50:35 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:36 INFO  src/db.c:325: HSCAN filekey:fileuuid7 136 MATCH trace:* COUNT 20
+2024-05-30 11:50:36 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:36 INFO  src/db.c:325: HSCAN filekey:fileuuid7 808 MATCH trace:* COUNT 20
+2024-05-30 11:50:36 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:36 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1176 MATCH trace:* COUNT 20
+2024-05-30 11:50:36 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:36 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1240 MATCH trace:* COUNT 20
+2024-05-30 11:50:36 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:37 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1464 MATCH trace:* COUNT 20
+2024-05-30 11:50:37 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:37 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1796 MATCH trace:* COUNT 20
+2024-05-30 11:50:37 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:37 INFO  src/db.c:325: HSCAN filekey:fileuuid7 292 MATCH trace:* COUNT 20
+2024-05-30 11:50:37 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:37 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1764 MATCH trace:* COUNT 20
+2024-05-30 11:50:37 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:37 INFO  src/db.c:325: HSCAN filekey:fileuuid7 340 MATCH trace:* COUNT 20
+2024-05-30 11:50:37 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:37 INFO  src/db.c:325: HSCAN filekey:fileuuid7 116 MATCH trace:* COUNT 20
+2024-05-30 11:50:37 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:38 INFO  src/db.c:325: HSCAN filekey:fileuuid7 12 MATCH trace:* COUNT 20
+2024-05-30 11:50:38 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:38 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1868 MATCH trace:* COUNT 20
+2024-05-30 11:50:38 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:38 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1644 MATCH trace:* COUNT 20
+2024-05-30 11:50:38 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:38 INFO  src/db.c:325: HSCAN filekey:fileuuid7 924 MATCH trace:* COUNT 20
+2024-05-30 11:50:38 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:38 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1148 MATCH trace:* COUNT 20
+2024-05-30 11:50:38 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:38 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1410 MATCH trace:* COUNT 20
+2024-05-30 11:50:38 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:39 INFO  src/db.c:325: HSCAN filekey:fileuuid7 34 MATCH trace:* COUNT 20
+2024-05-30 11:50:39 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:39 INFO  src/db.c:325: HSCAN filekey:fileuuid7 994 MATCH trace:* COUNT 20
+2024-05-30 11:50:39 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:39 INFO  src/db.c:325: HSCAN filekey:fileuuid7 594 MATCH trace:* COUNT 20
+2024-05-30 11:50:39 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:39 INFO  src/db.c:325: HSCAN filekey:fileuuid7 818 MATCH trace:* COUNT 20
+2024-05-30 11:50:39 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:39 INFO  src/db.c:325: HSCAN filekey:fileuuid7 138 MATCH trace:* COUNT 20
+2024-05-30 11:50:39 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:39 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1066 MATCH trace:* COUNT 20
+2024-05-30 11:50:39 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:40 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1386 MATCH trace:* COUNT 20
+2024-05-30 11:50:40 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:40 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1178 MATCH trace:* COUNT 20
+2024-05-30 11:50:40 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:40 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1754 MATCH trace:* COUNT 20
+2024-05-30 11:50:40 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:40 INFO  src/db.c:325: HSCAN filekey:fileuuid7 378 MATCH trace:* COUNT 20
+2024-05-30 11:50:40 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:40 INFO  src/db.c:325: HSCAN filekey:fileuuid7 390 MATCH trace:* COUNT 20
+2024-05-30 11:50:40 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:40 INFO  src/db.c:325: HSCAN filekey:fileuuid7 806 MATCH trace:* COUNT 20
+2024-05-30 11:50:40 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:41 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1254 MATCH trace:* COUNT 20
+2024-05-30 11:50:41 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:41 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1238 MATCH trace:* COUNT 20
+2024-05-30 11:50:41 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:41 INFO  src/db.c:325: HSCAN filekey:fileuuid7 374 MATCH trace:* COUNT 20
+2024-05-30 11:50:41 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:41 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1614 MATCH trace:* COUNT 20
+2024-05-30 11:50:41 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:41 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1134 MATCH trace:* COUNT 20
+2024-05-30 11:50:41 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:41 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1694 MATCH trace:* COUNT 20
+2024-05-30 11:50:41 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:42 INFO  src/db.c:325: HSCAN filekey:fileuuid7 574 MATCH trace:* COUNT 20
+2024-05-30 11:50:42 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:42 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1790 MATCH trace:* COUNT 20
+2024-05-30 11:50:42 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:42 INFO  src/db.c:325: HSCAN filekey:fileuuid7 321 MATCH trace:* COUNT 20
+2024-05-30 11:50:42 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:42 INFO  src/db.c:325: HSCAN filekey:fileuuid7 417 MATCH trace:* COUNT 20
+2024-05-30 11:50:42 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:42 INFO  src/db.c:325: HSCAN filekey:fileuuid7 657 MATCH trace:* COUNT 20
+2024-05-30 11:50:42 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:43 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1201 MATCH trace:* COUNT 20
+2024-05-30 11:50:43 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:43 INFO  src/db.c:325: HSCAN filekey:fileuuid7 2033 MATCH trace:* COUNT 20
+2024-05-30 11:50:43 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:43 INFO  src/db.c:325: HSCAN filekey:fileuuid7 329 MATCH trace:* COUNT 20
+2024-05-30 11:50:43 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:43 INFO  src/db.c:325: HSCAN filekey:fileuuid7 681 MATCH trace:* COUNT 20
+2024-05-30 11:50:43 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:43 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1769 MATCH trace:* COUNT 20
+2024-05-30 11:50:43 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:43 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1753 MATCH trace:* COUNT 20
+2024-05-30 11:50:43 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:44 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1209 MATCH trace:* COUNT 20
+2024-05-30 11:50:44 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:44 INFO  src/db.c:325: HSCAN filekey:fileuuid7 517 MATCH trace:* COUNT 20
+2024-05-30 11:50:44 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:44 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1989 MATCH trace:* COUNT 20
+2024-05-30 11:50:44 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:44 INFO  src/db.c:325: HSCAN filekey:fileuuid7 2021 MATCH trace:* COUNT 20
+2024-05-30 11:50:44 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:45 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1237 MATCH trace:* COUNT 20
+2024-05-30 11:50:45 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:45 INFO  src/db.c:325: HSCAN filekey:fileuuid7 821 MATCH trace:* COUNT 20
+2024-05-30 11:50:45 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:45 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1013 MATCH trace:* COUNT 20
+2024-05-30 11:50:45 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:45 INFO  src/db.c:325: HSCAN filekey:fileuuid7 589 MATCH trace:* COUNT 20
+2024-05-30 11:50:45 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:45 INFO  src/db.c:325: HSCAN filekey:fileuuid7 173 MATCH trace:* COUNT 20
+2024-05-30 11:50:45 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:46 INFO  src/db.c:325: HSCAN filekey:fileuuid7 2029 MATCH trace:* COUNT 20
+2024-05-30 11:50:46 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:46 INFO  src/db.c:325: HSCAN filekey:fileuuid7 61 MATCH trace:* COUNT 20
+2024-05-30 11:50:46 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:46 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1917 MATCH trace:* COUNT 20
+2024-05-30 11:50:46 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:46 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1155 MATCH trace:* COUNT 20
+2024-05-30 11:50:46 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:46 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1059 MATCH trace:* COUNT 20
+2024-05-30 11:50:46 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:46 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1763 MATCH trace:* COUNT 20
+2024-05-30 11:50:46 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:46 INFO  src/db.c:325: HSCAN filekey:fileuuid7 851 MATCH trace:* COUNT 20
+2024-05-30 11:50:46 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:47 INFO  src/db.c:325: HSCAN filekey:fileuuid7 627 MATCH trace:* COUNT 20
+2024-05-30 11:50:47 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:47 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1931 MATCH trace:* COUNT 20
+2024-05-30 11:50:47 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:47 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1195 MATCH trace:* COUNT 20
+2024-05-30 11:50:47 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:47 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1179 MATCH trace:* COUNT 20
+2024-05-30 11:50:47 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:47 INFO  src/db.c:325: HSCAN filekey:fileuuid7 571 MATCH trace:* COUNT 20
+2024-05-30 11:50:47 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:47 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1403 MATCH trace:* COUNT 20
+2024-05-30 11:50:47 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:48 INFO  src/db.c:325: HSCAN filekey:fileuuid7 839 MATCH trace:* COUNT 20
+2024-05-30 11:50:48 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:48 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1191 MATCH trace:* COUNT 20
+2024-05-30 11:50:48 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:48 INFO  src/db.c:325: HSCAN filekey:fileuuid7 23 MATCH trace:* COUNT 20
+2024-05-30 11:50:48 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:48 INFO  src/db.c:325: HSCAN filekey:fileuuid7 215 MATCH trace:* COUNT 20
+2024-05-30 11:50:48 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:48 INFO  src/db.c:325: HSCAN filekey:fileuuid7 503 MATCH trace:* COUNT 20
+2024-05-30 11:50:48 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:48 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1743 MATCH trace:* COUNT 20
+2024-05-30 11:50:48 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:49 INFO  src/db.c:325: HSCAN filekey:fileuuid7 879 MATCH trace:* COUNT 20
+2024-05-30 11:50:49 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:49 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1631 MATCH trace:* COUNT 20
+2024-05-30 11:50:49 INFO  src/kserver.c:407: (/filegettrace) connect close
+2024-05-30 11:50:49 INFO  src/db.c:325: HSCAN filekey:fileuuid7 1855 MATCH trace:* COUNT 20
+2024-05-30 11:50:49 INFO  src/kserver.c:407: (/filegettrace) connect close
