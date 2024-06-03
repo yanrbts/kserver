@@ -43,6 +43,8 @@
 #include <pthread.h>
 #include <civetweb.h>
 #include <hiredis.h>
+#include <read.h>
+#include <net.h>
 
 #include "zmalloc.h"
 #include "sds.h"

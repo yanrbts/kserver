@@ -30,6 +30,7 @@
 /* The number of data items obtained per page in paging */
 #define PAGENUM 20
 
+static redisContext *create_redis_ctx();
 static int kx_post_reply(redisReply *reply, sds *out);
 static int kx_hgetall_userinfo(redisReply *reply, sds *out);
 static int kx_hget_file(redisReply *reply, sds *out);
@@ -288,7 +289,7 @@ end:
 }
 
 static redisReply *kx_command(redisContext *c, const char *cmd) {
-    int attempts;
+    // int attempts;
     redisReply  *reply = NULL;
 
     assert(!c->err);
@@ -310,21 +311,40 @@ static redisReply *kx_command(redisContext *c, const char *cmd) {
 
     // return reply;
 
-    for (attempts = 0; attempts < 3; attempts++) {
-        assert(!c->err);
+    // for (attempts = 0; attempts < 3; attempts++) {
+    //     assert(!c->err);
+    //     reply = redisCommand(c, cmd);
+    //     if (reply != NULL) {
+    //         break;
+    //     }
+    //     if (c->err) {
+    //         log_error("redis Error: (%d) %s", c->err, c->errstr);
+    //         // exit(1);
+    //     }
+    //     log_warn("redisCommand failed, retrying...");
+    //     redisReconnect(c);
+    //     sleep(1);
+    // }
+
+    /*int ret;
+    do {
         reply = redisCommand(c, cmd);
         if (reply != NULL) {
             break;
         }
         if (c->err) {
             log_error("redis Error: (%d) %s", c->err, c->errstr);
-            // exit(1);
         }
-        log_warn("redisCommand failed, retrying...");
-        redisReconnect(c);
-        sleep(1);
-    }
 
+        log_warn("redisCommand failed, retrying...");
+        ret = redisReconnect(c);
+        if (c->err) {
+            log_error("redis Reconnect: (%d) %s", c->err, c->errstr);
+        }
+        sleep(1);
+    } while (ret == REDIS_ERR || reply == NULL);*/
+
+    reply = redisCommand(c, cmd);
     if (reply == NULL) {
         log_error("redis reply=null error: %s (%s)", c->errstr ? c->errstr : "unknown error", cmd);
     }
@@ -363,12 +383,10 @@ ret:
     return reply;
 }
 
+#define REDIS_CLI_KEEPALIVE_INTERVAL 15 /* seconds */
 /* Create a redis link context, create one for each 
  * link separately, and release it after use*/
 static redisContext *create_redis_ctx() {
-    if (server.redisctx)
-        return server.redisctx;
-    // int tries = 0;
     redisContext *ctx = NULL;
     struct timeval timeout = {1, 500000}; // 1.5 seconds
 
@@ -382,7 +400,12 @@ static redisContext *create_redis_ctx() {
         }
         exit(1);
     }
-    server.redisctx = ctx;
+
+    /* Set aggressive KEEP_ALIVE socket option in the Redis context socket
+    * in order to prevent timeouts caused by the execution of long
+    * commands. At the same time this improves the detection of real
+    * errors. */
+    redisKeepAlive(ctx, REDIS_CLI_KEEPALIVE_INTERVAL);
 
     return ctx;
 }
@@ -408,16 +431,16 @@ int redis_user_register(void *data, sds *outdata) {
                                 u->machine,
                                 u->username);
             if (reply == NULL) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return -1;
             }
             
             if (ac->syncexec(reply, outdata) == 0) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return 0;
             }
         }
-        // redisFree(ctx);
+        redisFree(ctx);
     }
     return -1;
 }
@@ -441,16 +464,16 @@ int redis_get_user(void *data, sds *outdata) {
                                 ac->cmdline, 
                                 machine);
             if (reply == NULL) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return -1;
             }
 
             if (ac->syncexec(reply, outdata) == 0) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return 0;
             } 
         }
-        // redisFree(ctx);
+        redisFree(ctx);
     }
     return -1;
 }
@@ -476,16 +499,16 @@ int redis_upload_file(void *data, sds *outdata) {
                                 f->uuid,
                                 f->data);
             if (reply == NULL) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return -1;
             }
 
             if (ac->syncexec(reply, outdata) == 0) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return 0;
             } 
         }
-        // redisFree(ctx);
+        redisFree(ctx);
     }
     return -1;
 }
@@ -511,16 +534,16 @@ int redis_upload_machine_file(void *data, sds *outdata) {
                                 f->uuid,
                                 f->data);
             if (reply == NULL) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return -1;
             }
 
             if (ac->syncexec(reply, outdata) == 0) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return 0;
             } 
         }
-        // redisFree(ctx);
+        redisFree(ctx);
     }
     return -1;
 }
@@ -545,16 +568,16 @@ int redis_get_file(void *data, sds *outdata) {
                                 uuid,
                                 uuid);
             if (reply == NULL) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return -1;
             }
 
             if (ac->syncexec(reply, outdata) == 0) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return 0;
             } 
         }
-        // redisFree(ctx);
+        redisFree(ctx);
     }
     return -1;
 }
@@ -580,16 +603,16 @@ int redis_get_fileall(void *data, sds *outdata) {
                                 fs->page,
                                 server.pagenum);
             if (reply == NULL) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return -1;
             }
 
             if (ac->syncexec(reply, outdata) == 0) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return 0;
             } 
         }
-        // redisFree(ctx);
+        redisFree(ctx);
     }
     return -1;
 }
@@ -615,24 +638,32 @@ int redis_set_trace(void *data, sds *outdata) {
                                 ft->tracefield,
                                 ft->data);
             if (reply == NULL) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return -1;
             }
 
             if (ac->syncexec(reply, outdata) == 0) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return 0;
             } 
         }
-        // redisFree(ctx);
+        redisFree(ctx);
     }
     return -1;
+}
+
+void *redistraceCommand(redisContext *c, const char *format, ...) {
+    va_list ap;
+    va_start(ap,format);
+    void *reply = redisvCommand(c,format,ap);
+    va_end(ap);
+    return reply;
 }
 
 int redis_get_trace(void *data, sds *outdata) {
     struct action   *ac = NULL;
     redisReply      *reply = NULL;
-    redisContext    *ctx;
+    redisContext    *ctx = NULL;
     Kgettrace       *fg;
 
     fg = (Kgettrace*)data;
@@ -644,22 +675,22 @@ int redis_get_trace(void *data, sds *outdata) {
     if (ctx) {
         ac = kx_search_action(REDIS_GET_TRACE);
         if (ac) {
-            reply = kx_sync_send_cmd(ctx,
+            reply = redistraceCommand(ctx,
                                 ac->cmdline, 
                                 fg->uuid,
                                 fg->page,
                                 server.pagenum);
             if (reply == NULL) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return -1;
             }
             
             if (ac->syncexec(reply, outdata) == 0) {
-                // redisFree(ctx);
+                redisFree(ctx);
                 return 0;
             } 
         }
-        // redisFree(ctx);
+        redisFree(ctx);
     }
     return -1;
 }

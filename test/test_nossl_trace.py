@@ -84,12 +84,11 @@ def gettraces():
             # print('Response:', response)
             n = len(response['traces'])
             print(f"Number of traces: {n}")
-            gettracespage(page)
         else:
             break
 
 if __name__ == "__main__":
-    setfile()
-    for _ in range(30):
-        settrace()
+    # setfile()
+    # for _ in range(30):
+    #     settrace()
     gettraces()

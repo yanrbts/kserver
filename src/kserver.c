@@ -589,7 +589,7 @@ static void initServerConfig(void) {
 static void initserver() {
     int ret;
 
-    const char *options[] = {
+    /*const char *options[] = {
         "document_root", HTTP_ROOT,
         "listening_ports", server.httpport,
         "request_timeout_ms", server.request_timeout,
@@ -602,14 +602,14 @@ static void initserver() {
         "ssl_cipher_list", server.ssl_cipher_list,
         "error_log_file", "error.log",
         NULL,NULL
-    };
+    };*/
 
-    // const char *options[] = {
-    //     "document_root", HTTP_ROOT,
-    //     "listening_ports", HTTP_PORT,
-    //     "request_timeout_ms", "10000",
-    //     NULL
-    // };
+    const char *options[] = {
+        "document_root", HTTP_ROOT,
+        "listening_ports", HTTP_PORT,
+        "request_timeout_ms", "10000",
+        NULL
+    };
     
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
@@ -728,8 +728,8 @@ static void stopserver() {
     if (server.logfp)
         fclose(server.logfp);
 
-    if (server.redisctx)
-        redisFree(server.redisctx);
+    // if (server.redisctx)
+    //     redisFree(server.redisctx);
     free(server.system_info);
     mg_exit_library();
 }
