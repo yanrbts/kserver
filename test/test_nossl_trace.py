@@ -85,10 +85,12 @@ def gettraces():
             n = len(response['traces'])
             print(f"Number of traces: {n}")
         else:
+            n = len(response['traces'])
+            print(f"Number of traces: {n}")
             break
 
 if __name__ == "__main__":
-    # setfile()
-    # for _ in range(30):
-    #     settrace()
+    setfile()
+    for _ in range(30):
+        settrace()
     gettraces()

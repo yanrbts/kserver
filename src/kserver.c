@@ -52,9 +52,9 @@ struct Server server;
 static char error_text[256] = {0};
 
 static void showWebOption(void);
-static void initserver();
-static void startserver();
-static void stopserver();
+static void initServer();
+static void startServer();
+static void stopServer();
 static int ksresponse(struct mg_connection *conn, 
                         const void *buf,
                         size_t len,
@@ -550,7 +550,7 @@ static void sigShutdownHandler(int sig) {
     }
     printf("[*] %s\n", msg);
 
-    stopserver();
+    stopServer();
     exit(1);
 }
 
@@ -572,24 +572,31 @@ static void initServerConfig(void) {
     server.redisip = zstrdup(CONFIG_REDIS_IP);
     server.redisport = CONFIG_REDIS_PORT;
     server.pagenum = REDIS_PAGENUM;
-    server.httpport = zstrdup(HTTPS_PORT);
+    server.httpport = zstrdup(HTTP_PORT);
     server.request_timeout = zstrdup(HTTP_REQUEST_MS);
     server.daemonize = 0;
     server.pidfile = NULL;
     server.logfile = zstrdup(CONFIG_DEFAULT_LOGFILE);
     server.auth_domain = zstrdup(CONFIG_CIVET_AUTH_DOMAIN);
     server.auth_domain_check = zstrdup(CONFIG_CIVET_DOMAIN_CHECK);
+    server.ssl_no = CONFIG_CIVET_SSL_NO;
     server.ssl_certificate = zstrdup(CONFIG_CIVET_CERT);
     server.ssl_ca_file = zstrdup(CONFIG_CIVET_CA);
     server.ssl_protocol_version = zstrdup(CONFIG_CIVET_SSLPROTOVOL);
     server.ssl_cipher_list = zstrdup(CONFIG_CIVET_SSLCIPHER);
     server.logfp = NULL;
+
+    server.num_threads = zstrdup(CONFIG_CIVET_THREADS_NUM);
+    server.prespawn_threads = zstrdup(CONFIG_CIVET_THREADS_PRESPAWN);
+    server.listen_backlog = zstrdup(CONFIG_CIVET_LISTEN_BACKLOG);
+    server.connection_queue = zstrdup(CONFIG_CIVET_CONN_QUEUE);
 }
 
-static void initserver() {
+static void initServer() {
     int ret;
-
-    /*const char *options[] = {
+    /*const char **options;
+    
+    const char *ssl_options[] = {
         "document_root", HTTP_ROOT,
         "listening_ports", server.httpport,
         "request_timeout_ms", server.request_timeout,
@@ -600,14 +607,22 @@ static void initserver() {
         "ssl_ca_file", server.ssl_ca_file,
 		"ssl_protocol_version", server.ssl_protocol_version,
         "ssl_cipher_list", server.ssl_cipher_list,
+        "num_threads", server.num_threads,
+        "prespawn_threads", server.prespawn_threads,
+        "listen_backlog", server.listen_backlog,
+        "connection_queue", server.connection_queue,
         "error_log_file", "error.log",
         NULL,NULL
     };*/
 
-    const char *options[] = {
+    const char *sslno_options[] = {
         "document_root", HTTP_ROOT,
-        "listening_ports", HTTP_PORT,
-        "request_timeout_ms", "10000",
+        "listening_ports", server.httpport,
+        "request_timeout_ms", server.request_timeout,
+        "num_threads", server.num_threads,
+        "prespawn_threads", server.prespawn_threads,
+        "listen_backlog", server.listen_backlog,
+        "connection_queue", server.connection_queue,
         NULL
     };
     
@@ -641,7 +656,7 @@ static void initserver() {
 
     server.init.callbacks = &server.callbacks;
     server.init.user_data = NULL;
-    server.init.configuration_options = options;
+    server.init.configuration_options = sslno_options;
     server.ctx = NULL;
     
     if (server.logfile[0] != '\0') {
@@ -661,7 +676,7 @@ err:
     exit(0);
 }
 
-static void startserver() {
+static void startServer() {
     int n;
     int port_cnt;
 
@@ -697,7 +712,7 @@ err:
     exit(0);
 }
 
-static void stopserver() {
+static void stopServer() {
     if (server.ctx) 
         mg_stop(server.ctx);
     if (server.configfile)
@@ -727,9 +742,16 @@ static void stopserver() {
         zfree(server.ssl_cipher_list);
     if (server.logfp)
         fclose(server.logfp);
+    
+    if (server.num_threads)
+        zfree(server.num_threads);
+    if (server.prespawn_threads)
+        zfree(server.prespawn_threads);
+    if (server.listen_backlog)
+        zfree(server.listen_backlog);
+    if (server.connection_queue)
+        zfree(server.connection_queue);
 
-    // if (server.redisctx)
-    //     redisFree(server.redisctx);
     free(server.system_info);
     mg_exit_library();
 }
@@ -800,6 +822,12 @@ static void showWebOption(void) {
     fprintf(stderr, "[ %-24s %40s ]\n", "authentication_domain", value ? value : "<value>");
     value = mg_get_option(server.ctx, "num_threads");
     fprintf(stderr, "[ %-24s %40s ]\n", "num_threads", value ? value : "<value>");
+    value = mg_get_option(server.ctx, "prespawn_threads");
+    fprintf(stderr, "[ %-24s %40s ]\n", "prespawn_threads", value ? value : "<value>");
+    value = mg_get_option(server.ctx, "listen_backlog");
+    fprintf(stderr, "[ %-24s %40s ]\n", "listen_backlog", value ? value : "<value>");
+    value = mg_get_option(server.ctx, "connection_queue");
+    fprintf(stderr, "[ %-24s %40s ]\n", "connection_queue", value ? value : "<value>");
     value = mg_get_option(server.ctx, "ssl_protocol_version");
     fprintf(stderr, "[ %-24s %40s ]\n", "ssl_protocol_version", value ? value : "<value>");
     value = mg_get_option(server.ctx, "request_timeout_ms");
@@ -845,23 +873,23 @@ int main(int argc, char *argv[]) {
         loadServerConfig(configfile);
     }
 
-    printf(ascii_logo, KSERVER_VERSION, server.httpport ? server.httpport : HTTPS_PORT, (long)getpid());
+    if (server.daemonize)
+        daemonize();
+    
+    printf(ascii_logo, KSERVER_VERSION, server.httpport, (long)getpid());
 
     if (argc == 1) {
-        log_warn("no config file specified, using the default config. In order to specify a config file use %s /path/to/%s.conf", argv[0], argv[0]+2);
+        log_warn("no config file specified, using the default config. \nIn order to specify a config file use %s /path/to/%s.conf", argv[0], argv[0]+2);
     } else {
         log_info("Configuration loaded");
     }
 
-    if (server.daemonize)
-        daemonize();
-
-    initserver();
+    initServer();
 
     if (server.daemonize || server.pidfile)
         createPidFile();
     
-    startserver();
-    stopserver();
+    startServer();
+    stopServer();
     return 0;
 }

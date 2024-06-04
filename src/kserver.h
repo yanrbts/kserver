@@ -62,7 +62,7 @@
 #define HTTP_ROOT               "./api"
 #define HTTP_PORT               "8099"
 #define HTTP_REQUEST_MS         "10000"
-#define HTTPS_PORT              "80r,443s"
+// #define HTTPS_PORT              "80r,443s"
 #define CONFIG_MAX_LINE         1024
 #define CONFIG_DEFAULT_PID_FILE "/var/run/kserver.pid"
 #define CONFIG_DEFAULT_LOGFILE  ""
@@ -73,8 +73,15 @@
 #define CONFIG_CIVET_DOMAIN_CHECK   "yes"
 #define CONFIG_CIVET_CERT           "/home/yrb/kserver/cert/server.pem"
 #define CONFIG_CIVET_CA             "/home/yrb/kserver/cert/rootCA.pem"
+#define CONFIG_CIVET_DOMAIN_CHECK   "yes"
+#define CONFIG_CIVET_SSL_NO         1
 #define CONFIG_CIVET_SSLPROTOVOL    "4"
 #define CONFIG_CIVET_SSLCIPHER      "TLS_AES_128_GCM_SHA256:AES256-SHA:HIGH:!aNULL:!MD5:!3DES"
+
+#define CONFIG_CIVET_THREADS_NUM        "50"
+#define CONFIG_CIVET_THREADS_PRESPAWN   "5"
+#define CONFIG_CIVET_LISTEN_BACKLOG     "200"
+#define CONFIG_CIVET_CONN_QUEUE         "20"
 
 struct Server {
     struct mg_init_data init;
@@ -97,9 +104,17 @@ struct Server {
     char *auth_domain_check;            /* */
     char *ssl_certificate;              /* configuration parameter to the
                                          * file name (including path) of the resulting *.pem file.*/
+    int  ssl_no;                        /* Whether to use SSL connection */
     char *ssl_ca_file;                  /* ca file path */
     char *ssl_protocol_version;         /* 4:TLS1.2, 2:TLS1.x Allow SSLv3 and TLS */
     char *ssl_cipher_list;              /* some strong cipher(s) */
+    char *num_threads;                  /* Maximum number of worker threads allowed. 
+                                         * CivetWeb handles each incoming connection in a separate thread*/
+    char *prespawn_threads;             /* Number of worker threads that should be pre-spawned by mg_start() */
+    char *listen_backlog;               /* Maximum number of connections waiting to be accepted 
+                                         * by the server operating system.*/
+    char *connection_queue;             /* Maximum number of accepted connections waiting to be dispatched 
+                                         * by a worker thread.*/
     int daemonize;                      /* True if running as a daemon */
     char *pidfile;                      /* PID file path */
     char *logfile;                      /* log file */

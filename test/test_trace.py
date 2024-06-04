@@ -92,6 +92,8 @@ def gettraces():
             n = len(response['traces'])
             print(f"Number of traces: {n}")
         else:
+            n = len(response['traces'])
+            print(f"Number of traces: {n}")
             break
 
 if __name__ == "__main__":

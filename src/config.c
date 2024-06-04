@@ -112,6 +112,10 @@ static void loadServerConfigFromString(char *config) {
         } else if (!strcasecmp(argv[0], "auth_domain_check") && argc == 2) {
             zfree(server.auth_domain_check);
             server.auth_domain_check = zstrdup(argv[1]);
+        } else if (!strcasecmp(argv[0], "ssl_no") && argc == 2) {
+            if ((server.ssl_no = yesnotoi(argv[1])) == -1) {
+                err = "argument must be 'yes' or 'no'"; goto loaderr;
+            }
         } else if (!strcasecmp(argv[0], "ssl_certificate") && argc == 2) {
             zfree(server.ssl_certificate);
             server.ssl_certificate = zstrdup(argv[1]);
@@ -124,6 +128,18 @@ static void loadServerConfigFromString(char *config) {
         } else if (!strcasecmp(argv[0], "ssl_cipher_list") && argc == 2) {
             zfree(server.ssl_cipher_list);
             server.ssl_cipher_list = zstrdup(argv[1]);
+        } else if (!strcasecmp(argv[0], "num_threads") && argc == 2) {
+            zfree(server.num_threads);
+            server.num_threads = zstrdup(argv[1]);
+        } else if (!strcasecmp(argv[0], "prespawn_threads") && argc == 2) {
+            zfree(server.prespawn_threads);
+            server.prespawn_threads = zstrdup(argv[1]);
+        } else if (!strcasecmp(argv[0], "listen_backlog") && argc == 2) {
+            zfree(server.listen_backlog);
+            server.listen_backlog = zstrdup(argv[1]);
+        } else if (!strcasecmp(argv[0], "connection_queue") && argc == 2) {
+            zfree(server.connection_queue);
+            server.connection_queue = zstrdup(argv[1]);
         } else {
             err = "Bad directive or wrong number of arguments"; 
             goto loaderr;

@@ -29,6 +29,7 @@
 
 /* The number of data items obtained per page in paging */
 #define PAGENUM 20
+#define REDIS_CLI_KEEPALIVE_INTERVAL 15 /* seconds */
 
 static redisContext *create_redis_ctx();
 static int kx_post_reply(redisReply *reply, sds *out);
@@ -289,61 +290,9 @@ end:
 }
 
 static redisReply *kx_command(redisContext *c, const char *cmd) {
-    // int attempts;
     redisReply  *reply = NULL;
 
     assert(!c->err);
-
-    // while (reply == NULL) {
-    //     while (c->err & (REDIS_ERR_IO | REDIS_ERR_EOF)) {
-    //         log_warn("redis failed, retrying...");
-    //         redisFree(c);
-    //         c = redisConnect(server.redisip, server.redisport);
-    //         usleep(1000000);
-    //     }
-    //     reply = redisCommand(c, cmd);
-
-    //     if (c->err && !(c->err & (REDIS_ERR_IO | REDIS_ERR_EOF))) {
-    //         log_error("redis Error: %s\n", c->errstr);
-    //         exit(1);
-    //     }
-    // }
-
-    // return reply;
-
-    // for (attempts = 0; attempts < 3; attempts++) {
-    //     assert(!c->err);
-    //     reply = redisCommand(c, cmd);
-    //     if (reply != NULL) {
-    //         break;
-    //     }
-    //     if (c->err) {
-    //         log_error("redis Error: (%d) %s", c->err, c->errstr);
-    //         // exit(1);
-    //     }
-    //     log_warn("redisCommand failed, retrying...");
-    //     redisReconnect(c);
-    //     sleep(1);
-    // }
-
-    /*int ret;
-    do {
-        reply = redisCommand(c, cmd);
-        if (reply != NULL) {
-            break;
-        }
-        if (c->err) {
-            log_error("redis Error: (%d) %s", c->err, c->errstr);
-        }
-
-        log_warn("redisCommand failed, retrying...");
-        ret = redisReconnect(c);
-        if (c->err) {
-            log_error("redis Reconnect: (%d) %s", c->err, c->errstr);
-        }
-        sleep(1);
-    } while (ret == REDIS_ERR || reply == NULL);*/
-
     reply = redisCommand(c, cmd);
     if (reply == NULL) {
         log_error("redis reply=null error: %s (%s)", c->errstr ? c->errstr : "unknown error", cmd);
@@ -351,7 +300,7 @@ static redisReply *kx_command(redisContext *c, const char *cmd) {
     return reply;
 }
 
-static redisReply *kx_sync_send_cmd(redisContext *c, const char *fmt, ...) {
+static redisReply *kx_sync_send_cmd_debug(redisContext *c, const char *fmt, ...) {
     int                 size = 0;
     va_list             ap;
     char                *ptr = NULL;
@@ -383,7 +332,7 @@ ret:
     return reply;
 }
 
-#define REDIS_CLI_KEEPALIVE_INTERVAL 15 /* seconds */
+
 /* Create a redis link context, create one for each 
  * link separately, and release it after use*/
 static redisContext *create_redis_ctx() {
@@ -392,13 +341,25 @@ static redisContext *create_redis_ctx() {
 
     ctx = redisConnectWithTimeout(server.redisip, server.redisport, timeout);
     if (ctx == NULL || ctx->err) {
+
         if (ctx) {
-            log_error("redis Connection error: %s", ctx->errstr);
-            redisFree(ctx);
+            int n = 0;
+
+            while (ctx->err & (REDIS_ERR_IO | REDIS_ERR_EOF) && n < 3) {
+                log_warn("redis failed, retrying...");
+                redisFree(ctx);
+                ctx = redisConnect(server.redisip, server.redisport);
+                n++;
+            }
+
+            if (ctx == NULL || ctx->err) {
+                log_error("redis failed connect...");
+                exit(1);
+            }
         } else {
             log_error("redis Connection error: can't allocate redis context");
+            exit(1);
         }
-        exit(1);
     }
 
     /* Set aggressive KEEP_ALIVE socket option in the Redis context socket
@@ -425,7 +386,7 @@ int redis_user_register(void *data, sds *outdata) {
     if (ctx) {
         ac = kx_search_action(REDIS_USER_REGISTER);
         if (ac) {
-            reply = kx_sync_send_cmd(ctx,
+            reply = redisCommand(ctx,
                                 ac->cmdline, 
                                 u->machine,
                                 u->machine,
@@ -460,7 +421,7 @@ int redis_get_user(void *data, sds *outdata) {
     if (ctx) {
         ac = kx_search_action(REDIS_USER_GET_INFO);
         if (ac) {
-            reply = kx_sync_send_cmd(ctx,
+            reply = redisCommand(ctx,
                                 ac->cmdline, 
                                 machine);
             if (reply == NULL) {
@@ -493,7 +454,7 @@ int redis_upload_file(void *data, sds *outdata) {
     if (ctx) {
         ac = kx_search_action(REDIS_SET_FILE);
         if (ac) {
-            reply = kx_sync_send_cmd(ctx,
+            reply = redisCommand(ctx,
                                 ac->cmdline, 
                                 f->uuid,
                                 f->uuid,
@@ -528,7 +489,7 @@ int redis_upload_machine_file(void *data, sds *outdata) {
     if (ctx) {
         ac = kx_search_action(REDIS_SET_MACHINE_FILE);
         if (ac) {
-            reply = kx_sync_send_cmd(ctx,
+            reply = redisCommand(ctx,
                                 ac->cmdline, 
                                 f->machine,
                                 f->uuid,
@@ -563,7 +524,7 @@ int redis_get_file(void *data, sds *outdata) {
     if (ctx) {
         ac = kx_search_action(REDIS_GET_FILE);
         if (ac) {
-            reply = kx_sync_send_cmd(ctx,
+            reply = redisCommand(ctx,
                                 ac->cmdline, 
                                 uuid,
                                 uuid);
@@ -597,7 +558,7 @@ int redis_get_fileall(void *data, sds *outdata) {
     if (ctx) {
         ac = kx_search_action(REDIS_GET_ALL_FILES);
         if (ac) {
-            reply = kx_sync_send_cmd(ctx,
+            reply = redisCommand(ctx,
                                 ac->cmdline, 
                                 fs->machine,
                                 fs->page,
@@ -632,7 +593,7 @@ int redis_set_trace(void *data, sds *outdata) {
     if (ctx) {
         ac = kx_search_action(REDIS_SET_TRACE);
         if (ac) {
-            reply = kx_sync_send_cmd(ctx,
+            reply = redisCommand(ctx,
                                 ac->cmdline, 
                                 ft->uuid,
                                 ft->tracefield,
@@ -652,14 +613,6 @@ int redis_set_trace(void *data, sds *outdata) {
     return -1;
 }
 
-void *redistraceCommand(redisContext *c, const char *format, ...) {
-    va_list ap;
-    va_start(ap,format);
-    void *reply = redisvCommand(c,format,ap);
-    va_end(ap);
-    return reply;
-}
-
 int redis_get_trace(void *data, sds *outdata) {
     struct action   *ac = NULL;
     redisReply      *reply = NULL;
@@ -675,7 +628,7 @@ int redis_get_trace(void *data, sds *outdata) {
     if (ctx) {
         ac = kx_search_action(REDIS_GET_TRACE);
         if (ac) {
-            reply = redistraceCommand(ctx,
+            reply = redisCommand(ctx,
                                 ac->cmdline, 
                                 fg->uuid,
                                 fg->page,
