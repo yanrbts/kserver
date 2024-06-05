@@ -110,5 +110,6 @@ sds kx_trace_get(char *buf, size_t len);
 extern const char *STRFAIL;
 extern const char *STROK;
 extern const char *STRNOFOUND;
+extern const char *STRERROR;
 
 #endif

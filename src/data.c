@@ -30,6 +30,7 @@
 const char *STROK = "{\"flag\":\"OK\", \"msg\":\"success\"}";
 const char *STRFAIL = "{\"flag\":\"FAIL\", \"msg\":\"failed\"}";
 const char *STRNOFOUND = "{\"flag\":\"NOFOUND\", \"msg\":\"File not found\"}";
+const char *STRERROR = "{\"flag\":\"ERROR\", \"msg\":\"Server Error\"}";
 
 sds kx_user_register(char *buf, size_t len) {
     cJSON *root = NULL;

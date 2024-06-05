@@ -402,6 +402,7 @@ static int http_error(struct mg_connection *conn,
                         int status,
 	                    const char *errmsg) {
     log_error("civetweb error (%d) %s", status, errmsg);
+    mg_printf(conn, "%s", STRERROR);
     return 0;
 }
 
