@@ -62,7 +62,7 @@
 #define HTTP_ROOT               "./api"
 #define HTTP_PORT               "8099"
 #define HTTP_REQUEST_MS         "10000"
-// #define HTTPS_PORT              "80r,443s"
+#define HTTPS_PORT              "80r,443s"
 #define CONFIG_MAX_LINE         1024
 #define CONFIG_DEFAULT_PID_FILE "/var/run/kserver.pid"
 #define CONFIG_DEFAULT_LOGFILE  ""
@@ -74,7 +74,7 @@
 #define CONFIG_CIVET_CERT           "/home/yrb/kserver/cert/server.pem"
 #define CONFIG_CIVET_CA             "/home/yrb/kserver/cert/rootCA.pem"
 #define CONFIG_CIVET_DOMAIN_CHECK   "yes"
-#define CONFIG_CIVET_SSL_NO         1
+#define CONFIG_CIVET_SSL_NO         0
 #define CONFIG_CIVET_SSLPROTOVOL    "4"
 #define CONFIG_CIVET_SSLCIPHER      "TLS_AES_128_GCM_SHA256:AES256-SHA:HIGH:!aNULL:!MD5:!3DES"
 
@@ -98,13 +98,14 @@ struct Server {
     char *configfile;                   /* Absolute config file path, or NULL */
     uint32_t pagenum;                   /* Redis paging query is the maximum number 
                                          * of query data items per page.*/
+    const char **options;
     char *httpport;                     /* web service configuration port */
     char *request_timeout;              /* Request timeout in milliseconds */
     char *auth_domain;                  /* config parameter of the domain being configured.*/
     char *auth_domain_check;            /* */
     char *ssl_certificate;              /* configuration parameter to the
                                          * file name (including path) of the resulting *.pem file.*/
-    int  ssl_no;                        /* Whether to use SSL connection */
+    int  ssl;                           /* Whether to use SSL connection */
     char *ssl_ca_file;                  /* ca file path */
     char *ssl_protocol_version;         /* 4:TLS1.2, 2:TLS1.x Allow SSLv3 and TLS */
     char *ssl_cipher_list;              /* some strong cipher(s) */

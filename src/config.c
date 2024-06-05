@@ -112,8 +112,8 @@ static void loadServerConfigFromString(char *config) {
         } else if (!strcasecmp(argv[0], "auth_domain_check") && argc == 2) {
             zfree(server.auth_domain_check);
             server.auth_domain_check = zstrdup(argv[1]);
-        } else if (!strcasecmp(argv[0], "ssl_no") && argc == 2) {
-            if ((server.ssl_no = yesnotoi(argv[1])) == -1) {
+        } else if (!strcasecmp(argv[0], "ssl") && argc == 2) {
+            if ((server.ssl = yesnotoi(argv[1])) == -1) {
                 err = "argument must be 'yes' or 'no'"; goto loaderr;
             }
         } else if (!strcasecmp(argv[0], "ssl_certificate") && argc == 2) {

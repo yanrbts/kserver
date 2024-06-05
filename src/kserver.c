@@ -40,12 +40,20 @@
 
 
 
-char *ascii_logo ="\n" 
-"    __                                      | Version: %s\n"                       
-"   / /__________  ______   _____  _____     | Port: %s \n"
-"  / //_/ ___/ _ \\/ ___/ | / / _ \\/ ___/     | PID: %ld\n"
-" / ,< (__  )  __/ /   | |/ /  __/ /         | Author: Yanruibing\n"   
-"/_/|_/____/\\___/_/    |___/\\___/_/          | Web: http://www.kxyk.com \n\n";
+// char *ascii_logo ="\n" 
+// "    __                                      | Version: %s\n"                       
+// "   / /__________  ______   _____  _____     | Port: %s \n"
+// "  / //_/ ___/ _ \\/ ___/ | / / _ \\/ ___/     | PID: %ld\n"
+// " / ,< (__  )  __/ /   | |/ /  __/ /         | Author: Yanruibing\n"   
+// "/_/|_/____/\\___/_/    |___/\\___/_/          | Web: http://www.kxyk.com \n\n";
+
+char *ascii_logo = 
+"|    __                                                        |\n"                       
+"|   / /__________  ______   _____  _____                       |\n"
+"|  / //_/ ___/ _ \\/ ___/ | / / _ \\/ ___/                       |\n"
+"| / ,< (__  )  __/ /   | |/ /  __/ /                           |\n"   
+"|/_/|_/____/\\___/_/    |___/\\___/_/                            |\n"
+"|                                                              |\n";
 
 struct Server server;
 
@@ -59,7 +67,6 @@ static int ksresponse(struct mg_connection *conn,
                         const void *buf,
                         size_t len,
                         int status);
-static char *ksdup(const char *str);
 static void init_system_info(void);
 
 static int log_message_cb(const struct mg_connection *conn, const char *message);
@@ -369,29 +376,13 @@ static void send_directory_listing(struct mg_connection *conn, const char *dir) 
 }
 
 /*******************************************************************************/
-static char *ksdup(const char *str) {
-	size_t len;
-	char *p;
-
-	len = strlen(str) + 1;
-	p = (char *)malloc(len);
-
-	if (p == NULL) {
-		log_error("Cannot allocate %u bytes", (unsigned)len);
-        exit(EXIT_FAILURE);
-	}
-
-	memcpy(p, str, len);
-	return p;
-}
-
 static void init_system_info(void) {
 	int len = mg_get_system_info(NULL, 0);
 	if (len > 0) {
-		server.system_info = (char *)malloc((unsigned)len + 1);
+		server.system_info = (char *)zmalloc((unsigned)len + 1);
 		(void)mg_get_system_info(server.system_info, len + 1);
 	} else {
-		server.system_info = ksdup("Not available");
+		server.system_info = zstrdup("Not available");
 	}
 }
 
@@ -579,7 +570,7 @@ static void initServerConfig(void) {
     server.logfile = zstrdup(CONFIG_DEFAULT_LOGFILE);
     server.auth_domain = zstrdup(CONFIG_CIVET_AUTH_DOMAIN);
     server.auth_domain_check = zstrdup(CONFIG_CIVET_DOMAIN_CHECK);
-    server.ssl_no = CONFIG_CIVET_SSL_NO;
+    server.ssl = CONFIG_CIVET_SSL_NO;
     server.ssl_certificate = zstrdup(CONFIG_CIVET_CERT);
     server.ssl_ca_file = zstrdup(CONFIG_CIVET_CA);
     server.ssl_protocol_version = zstrdup(CONFIG_CIVET_SSLPROTOVOL);
@@ -592,39 +583,49 @@ static void initServerConfig(void) {
     server.connection_queue = zstrdup(CONFIG_CIVET_CONN_QUEUE);
 }
 
+const char **generate_options(int ssl) {
+    const char **options;
+    int option_count;
+
+    if (ssl) {
+        option_count = 28; // 14 For option name and value
+    } else {
+        option_count = 14; // 7 For option name and value
+    }
+
+    options = zmalloc((option_count + 1) * sizeof(char *)); // +1 For the final NULL
+    if (!options) {
+        perror("Failed to allocate memory");
+        exit(EXIT_FAILURE);
+    }
+
+    int i = 0;
+    options[i++] = "document_root"; options[i++] = HTTP_ROOT;
+    options[i++] = "listening_ports"; options[i++] = server.ssl ? HTTPS_PORT : server.httpport;
+    options[i++] = "request_timeout_ms"; options[i++] = server.request_timeout;
+    options[i++] = "num_threads"; options[i++] = server.num_threads;
+    options[i++] = "prespawn_threads"; options[i++] = server.prespawn_threads;
+    options[i++] = "listen_backlog"; options[i++] = server.listen_backlog;
+    options[i++] = "connection_queue"; options[i++] = server.connection_queue;
+    options[i++] = "error_log_file"; options[i++] = "error.log";
+
+    if (ssl) {
+        options[i++] = "authentication_domain"; options[i++] = server.auth_domain;
+        options[i++] = "enable_auth_domain_check"; options[i++] = server.auth_domain_check;
+        options[i++] = "ssl_certificate"; options[i++] = server.ssl_certificate;
+        options[i++] = "ssl_ca_file"; options[i++] = server.ssl_ca_file;
+        options[i++] = "ssl_protocol_version"; options[i++] = server.ssl_protocol_version;
+        options[i++] = "ssl_cipher_list"; options[i++] = server.ssl_cipher_list;
+    }
+
+    options[i] = NULL; // The last element is set to NULL
+    server.options = options;
+
+    return options;
+}
+
 static void initServer() {
     int ret;
-    /*const char **options;
-    
-    const char *ssl_options[] = {
-        "document_root", HTTP_ROOT,
-        "listening_ports", server.httpport,
-        "request_timeout_ms", server.request_timeout,
-        "authentication_domain", server.auth_domain,
-        "enable_auth_domain_check", server.auth_domain_check,
-        "ssl_certificate", server.ssl_certificate,
-        // "ssl_certificate_chain", "/home/yrb/src/kserver/cert/rootCA.pem",
-        "ssl_ca_file", server.ssl_ca_file,
-		"ssl_protocol_version", server.ssl_protocol_version,
-        "ssl_cipher_list", server.ssl_cipher_list,
-        "num_threads", server.num_threads,
-        "prespawn_threads", server.prespawn_threads,
-        "listen_backlog", server.listen_backlog,
-        "connection_queue", server.connection_queue,
-        "error_log_file", "error.log",
-        NULL,NULL
-    };*/
-
-    const char *sslno_options[] = {
-        "document_root", HTTP_ROOT,
-        "listening_ports", server.httpport,
-        "request_timeout_ms", server.request_timeout,
-        "num_threads", server.num_threads,
-        "prespawn_threads", server.prespawn_threads,
-        "listen_backlog", server.listen_backlog,
-        "connection_queue", server.connection_queue,
-        NULL
-    };
     
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
@@ -656,7 +657,7 @@ static void initServer() {
 
     server.init.callbacks = &server.callbacks;
     server.init.user_data = NULL;
-    server.init.configuration_options = sslno_options;
+    server.init.configuration_options = generate_options(server.ssl);
     server.ctx = NULL;
     
     if (server.logfile[0] != '\0') {
@@ -752,7 +753,8 @@ static void stopServer() {
     if (server.connection_queue)
         zfree(server.connection_queue);
 
-    free(server.system_info);
+    zfree(server.options);
+    zfree(server.system_info);
     mg_exit_library();
 }
 /*********************************EXPORT FUNCTION*******************************/
@@ -801,7 +803,7 @@ static void createPidFile(void) {
 }
 
 static void showWebOption(void) {
-    // int i;
+    int i;
     const char *value;
     // const struct mg_option *options;
 
@@ -814,33 +816,42 @@ static void showWebOption(void) {
 	// 		        value ? value : "<value>");
     // }
 
-    value = mg_get_option(server.ctx, "listening_ports");
-    fprintf(stderr, "[ %-24s %40s ]\n", "listening_ports", value ? value : "<value>");
-    value = mg_get_option(server.ctx, "document_root");
-    fprintf(stderr, "[ %-24s %40s ]\n", "document_root", value ? value : "<value>");
-    value = mg_get_option(server.ctx, "authentication_domain");
-    fprintf(stderr, "[ %-24s %40s ]\n", "authentication_domain", value ? value : "<value>");
-    value = mg_get_option(server.ctx, "num_threads");
-    fprintf(stderr, "[ %-24s %40s ]\n", "num_threads", value ? value : "<value>");
-    value = mg_get_option(server.ctx, "prespawn_threads");
-    fprintf(stderr, "[ %-24s %40s ]\n", "prespawn_threads", value ? value : "<value>");
-    value = mg_get_option(server.ctx, "listen_backlog");
-    fprintf(stderr, "[ %-24s %40s ]\n", "listen_backlog", value ? value : "<value>");
-    value = mg_get_option(server.ctx, "connection_queue");
-    fprintf(stderr, "[ %-24s %40s ]\n", "connection_queue", value ? value : "<value>");
-    value = mg_get_option(server.ctx, "ssl_protocol_version");
-    fprintf(stderr, "[ %-24s %40s ]\n", "ssl_protocol_version", value ? value : "<value>");
-    value = mg_get_option(server.ctx, "request_timeout_ms");
-    fprintf(stderr, "[ %-24s %40s ]\n", "request_timeout_ms", value ? value : "<value>");
-    value = mg_get_option(server.ctx, "keep_alive_timeout_ms");
-    fprintf(stderr, "[ %-24s %40s ]\n", "keep_alive_timeout_ms", value ? value : "<value>");
-    value = mg_get_option(server.ctx, "max_request_size");
-    fprintf(stderr, "[ %-24s %40s ]\n", "max_request_size", value ? value : "<value>");
-    value = mg_get_option(server.ctx, "ssl_certificate");
-    fprintf(stderr, "[ %-24s %40s ]\n", "ssl_certificate", value ? value : "<value>");
-    value = mg_get_option(server.ctx, "ssl_ca_file");
-    fprintf(stderr, "[ %-24s %40s ]\n", "ssl_ca_file", value ? value : "<value>");
-    
+    const char *opts[] = {
+        "listening_ports",
+        "document_root",
+        "authentication_domain",
+        "num_threads",
+        "prespawn_threads",
+        "listen_backlog",
+        "connection_queue",
+        "ssl_protocol_version",
+        "request_timeout_ms",
+        "keep_alive_timeout_ms",
+        "max_request_size",
+        "ssl_certificate",
+        "ssl_ca_file",
+        "error_log_file",
+        NULL
+    };
+    fprintf(stderr, "\n");
+    fprintf(stderr, "/");
+    for (int i = 0; i < 62; i++) {
+        fprintf(stderr, "-");
+    }
+    fprintf(stderr, "\\\n");
+    fprintf(stderr, "%s", ascii_logo);
+    fprintf(stderr, "| %-24s %35s |\n", "Version", KSERVER_VERSION);
+    fprintf(stderr, "| %-24s %35d |\n", "PID", (int)getpid());
+    fprintf(stderr, "| %-24s %35s |\n", "Author", "Yanruibing");
+    for (i = 0; opts[i] != NULL; i++) {
+        value = mg_get_option(server.ctx, opts[i]);
+        fprintf(stderr, "| %-24s %35s |\n", opts[i], value ? value : "<value>");
+    }
+    fprintf(stderr, "\\");
+    for (int i = 0; i < 62; i++) {
+        fprintf(stderr, "-");
+    }
+    fprintf(stderr, "/\n\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -876,7 +887,7 @@ int main(int argc, char *argv[]) {
     if (server.daemonize)
         daemonize();
     
-    printf(ascii_logo, KSERVER_VERSION, server.httpport, (long)getpid());
+    // printf(ascii_logo, KSERVER_VERSION, server.httpport, (long)getpid());
 
     if (argc == 1) {
         log_warn("no config file specified, using the default config. \nIn order to specify a config file use %s /path/to/%s.conf", argv[0], argv[0]+2);
