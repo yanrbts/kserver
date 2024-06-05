@@ -398,6 +398,13 @@ static void connection_close_cb(const struct mg_connection *conn) {
         log_info("(%s) connect close", ri->local_uri);
 }
 
+static int http_error(struct mg_connection *conn, 
+                        int status,
+	                    const char *errmsg) {
+    log_error("civetweb error (%d) %s", status, errmsg);
+    return 0;
+}
+
 /* Server responds to client
  * conn : Created link object
  * buf : Information sent to the client
@@ -645,6 +652,7 @@ static void initServer() {
     memset(&server.callbacks, 0, sizeof(struct mg_callbacks));
     server.callbacks.log_message = log_message_cb;
     server.callbacks.connection_close = connection_close_cb;
+    server.callbacks.http_error = http_error;
     // server.callbacks.init_ssl = init_ssl;
 
     memset(&server.error, 0, sizeof(struct mg_error_data));
