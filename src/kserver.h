@@ -41,7 +41,9 @@
 #include <netinet/in.h>
 #include <signal.h>
 #include <pthread.h>
+#include <event.h>
 #include <civetweb.h>
+#include <async.h>
 #include <hiredis.h>
 #include <read.h>
 #include <net.h>
@@ -51,6 +53,7 @@
 #include "cJSON.h"
 #include "data.h"
 #include "db.h"
+#include "worker.h"
 #include "util.h"
 #include "log.h"
 
@@ -120,6 +123,9 @@ struct Server {
     char *pidfile;                      /* PID file path */
     char *logfile;                      /* log file */
     FILE *logfp;                        /* log file handle */
+
+    struct worker **w;
+	int next_worker;
 };
 
 typedef sds (*json_parse_handler)(char *buf, size_t len);
@@ -129,6 +135,15 @@ struct ApiEntry {
     json_parse_handler jfunc;   /* json parsing function */
 };
 
+struct http_client {
+	struct event ev;
+	struct worker *w;
+	struct Server *s;
+    struct mg_connection *conn;
+};
+
+struct http_client *http_client_new(struct worker *w, struct mg_connection *conn);
+void http_client_free(struct http_client *c);
 
 /*-----------------------------------------------------------------------------
  * Extern declarations

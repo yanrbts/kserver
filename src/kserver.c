@@ -292,23 +292,23 @@ const uint8_t SSL_KEY_ASN1[] = {
  * process from server.key/server.crt to these arrays on your own, and see if
  * you come to the same result.
  */
-static int
-init_ssl(void *ssl_ctx, void *user_data)
-{
-	SSL_CTX *ctx = (SSL_CTX *)ssl_ctx;
+// static int
+// init_ssl(void *ssl_ctx, void *user_data)
+// {
+// 	SSL_CTX *ctx = (SSL_CTX *)ssl_ctx;
 
-	SSL_CTX_use_certificate_ASN1(ctx, sizeof(SSL_CERT_ASN1), SSL_CERT_ASN1);
-	SSL_CTX_use_PrivateKey_ASN1(EVP_PKEY_RSA,
-	                            ctx,
-	                            SSL_KEY_ASN1,
-	                            sizeof(SSL_KEY_ASN1));
-	if (SSL_CTX_check_private_key(ctx) == 0) {
-		log_error("SSL data inconsistency detected\n");
-		return -1;
-	}
+// 	SSL_CTX_use_certificate_ASN1(ctx, sizeof(SSL_CERT_ASN1), SSL_CERT_ASN1);
+// 	SSL_CTX_use_PrivateKey_ASN1(EVP_PKEY_RSA,
+// 	                            ctx,
+// 	                            SSL_KEY_ASN1,
+// 	                            sizeof(SSL_KEY_ASN1));
+// 	if (SSL_CTX_check_private_key(ctx) == 0) {
+// 		log_error("SSL data inconsistency detected\n");
+// 		return -1;
+// 	}
 
-	return 0; /* let CivetWeb set up the rest of OpenSSL */
-}
+// 	return 0; /* let CivetWeb set up the rest of OpenSSL */
+// }
 
 /**************************API FUNCTION******************************/
 
@@ -478,6 +478,8 @@ request_handler(struct mg_connection *conn, void *cbdata) {
     const struct mg_request_info *ri = NULL;
     size_t uri_len;
     size_t content_len;
+    struct worker *w;
+	struct http_client *c;
     
     /* Get the URI from the request info. */
     ri = mg_get_request_info(conn);
@@ -488,11 +490,21 @@ request_handler(struct mg_connection *conn, void *cbdata) {
 
         api = getApiFunc(ri->local_uri, ri->request_method);
         if (api && ri->content_length > 0) {
-            mg_read(conn, buf, sizeof(buf));
+            // mg_read(conn, buf, sizeof(buf));
 
-            /* The return data must be released here, 
-             * otherwise a memory leak will occur */
-            response = api->jfunc(buf, strlen(buf));
+            // /* The return data must be released here, 
+            //  * otherwise a memory leak will occur */
+            // response = api->jfunc(buf, strlen(buf));
+
+            /* select worker to send the client to */
+            w = server.w[server.next_worker];
+
+            c = http_client_new(w, conn);
+            worker_add_client(w, c);
+
+            /* loop over ring of workers */
+            server.next_worker = (server.next_worker + 1) % 5;
+            return 0;
         } else {
             status = HTTP_NOFOUND;
             response = sdsnew(STRFAIL);
@@ -681,6 +693,12 @@ static void initServer() {
         }
     }
 
+    /* workers */
+	server.w = calloc(5, sizeof(struct worker*));
+	for(int i = 0; i < 5; ++i) {
+		server.w[i] = worker_new(&server);
+	}
+
     return;
 err:
     exit(0);
@@ -689,6 +707,11 @@ err:
 static void startServer() {
     int n;
     int port_cnt;
+
+    /* start worker threads */
+	for(int i = 0; i < 5; ++i) {
+		worker_start(server.w[i]);
+	}
 
     server.ctx = mg_start2(&server.init, &server.error);
     if (server.ctx && server.error.code == MG_ERROR_DATA_CODE_OK) {
@@ -777,6 +800,20 @@ long long ustime(void) {
     ust = ((long long)tv.tv_sec)*1000000;
     ust += tv.tv_usec;
     return ust;
+}
+
+struct http_client *http_client_new(struct worker *w, struct mg_connection *conn) {
+    struct http_client *c = calloc(1, sizeof(struct http_client));
+
+    c->w = w;
+    c->s = w->s;
+    c->conn = conn;
+
+    return c;
+}
+
+void http_client_free(struct http_client *c) {
+	free(c);
 }
 
 /********************************************************************************/

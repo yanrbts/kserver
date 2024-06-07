@@ -289,7 +289,7 @@ end:
     return ret;
 }
 
-static redisReply *kx_command(redisContext *c, const char *cmd) {
+/*static redisReply *kx_command(redisContext *c, const char *cmd) {
     redisReply  *reply = NULL;
 
     assert(!c->err);
@@ -298,9 +298,9 @@ static redisReply *kx_command(redisContext *c, const char *cmd) {
         log_error("redis reply=null error: %s (%s)", c->errstr ? c->errstr : "unknown error", cmd);
     }
     return reply;
-}
+}*/
 
-static redisReply *kx_sync_send_cmd_debug(redisContext *c, const char *fmt, ...) {
+/*static redisReply *kx_sync_send_cmd_debug(redisContext *c, const char *fmt, ...) {
     int                 size = 0;
     va_list             ap;
     char                *ptr = NULL;
@@ -330,7 +330,7 @@ static redisReply *kx_sync_send_cmd_debug(redisContext *c, const char *fmt, ...)
 ret:
     if (ptr) zfree(ptr);
     return reply;
-}
+}*/
 
 
 /* Create a redis link context, create one for each 
